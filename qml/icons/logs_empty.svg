@@ -1,0 +1,14 @@
+<svg viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clipboard body -->
+  <rect x="14" y="16" width="36" height="42" rx="4" fill="#f8f9fa" stroke="#dcdde1" stroke-width="2"/>
+  <!-- Header clip -->
+  <rect x="26" y="8" width="12" height="12" rx="2" fill="#7f8c8d" stroke="#7f8c8d" stroke-width="1"/>
+  <circle cx="32" cy="12" r="2" fill="#ffffff"/>
+  <!-- Document rows -->
+  <line x1="20" y1="28" x2="44" y2="28" stroke="#bdc3c7" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="36" x2="38" y2="36" stroke="#bdc3c7" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="44" x2="44" y2="44" stroke="#bdc3c7" stroke-width="2" stroke-linecap="round"/>
+  <!-- Subtle log check -->
+  <circle cx="40" cy="36" r="3" fill="#07c160" opacity="0.8"/>
+  <path d="M38.5 36l1 1 2-2" fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

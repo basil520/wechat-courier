@@ -1,0 +1,64 @@
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls.Basic
+import "../theme"
+
+MenuItem {
+    id: root
+
+    property string iconSource: ""
+    property color iconColor: WxTheme.clTextSecondary
+    property color hoverIconColor: WxTheme.clPrimary
+    property string shortcutText: ""
+
+    font.family: WxTheme.fontFamily
+    font.pixelSize: WxTheme.fontSizeSmall
+    implicitHeight: 32
+
+    contentItem: RowLayout {
+        spacing: WxTheme.spSmall
+        anchors.fill: parent
+        anchors.leftMargin: WxTheme.spMedium
+        anchors.rightMargin: WxTheme.spMedium
+
+        WxIcon {
+            id: prefixIcon
+            iconSource: root.iconSource
+            iconSize: 14
+            iconColor: root.hovered ? root.hoverIconColor : root.iconColor
+            visible: root.iconSource !== ""
+            hoverScale: false
+        }
+
+        Text {
+            text: root.text
+            font: root.font
+            color: root.hovered ? WxTheme.clPrimary : WxTheme.clTextPrimary
+            Layout.fillWidth: true
+            verticalAlignment: Text.AlignVCenter
+
+            Behavior on color {
+                ColorAnimation { duration: WxTheme.animFast }
+            }
+        }
+
+        Text {
+            text: root.shortcutText
+            font.family: WxTheme.fontFamily
+            font.pixelSize: WxTheme.fontSizeTiny
+            color: WxTheme.clTextHint
+            visible: root.shortcutText !== ""
+            horizontalAlignment: Text.AlignRight
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    background: Rectangle {
+        color: root.hovered ? WxTheme.clBgSelected : "transparent"
+        radius: WxTheme.radiusSmall
+
+        Behavior on color {
+            ColorAnimation { duration: WxTheme.animFast }
+        }
+    }
+}

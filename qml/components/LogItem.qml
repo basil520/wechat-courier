@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic
 import "../theme"
 
 Rectangle {
@@ -10,6 +11,7 @@ Rectangle {
     property string detail: ""
     property string timestamp: ""
     property bool expanded: false
+    property var itemBackend: null
 
     height: root.expanded ? expandedLayout.implicitHeight + 10 : 24
     radius: WxTheme.radiusSmall
@@ -33,12 +35,14 @@ Rectangle {
         anchors.fill: parent
         anchors.leftMargin: 4
         anchors.rightMargin: 4
-        spacing: 4
+        spacing: 6
         visible: !root.expanded
 
-        Text {
-            text: root.status === "success" ? "✅" : "❌"
-            font.pixelSize: 12
+        WxIcon {
+            iconSource: root.status === "success" ? "../icons/success.svg" : "../icons/error.svg"
+            iconSize: 14
+            hoverScale: false
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
@@ -48,6 +52,7 @@ Rectangle {
             color: root.status === "success" ? WxTheme.clLogOk : WxTheme.clLogErr
             Layout.fillWidth: true
             elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
         }
 
         Text {
@@ -55,6 +60,7 @@ Rectangle {
             font.family: WxTheme.fontFamily
             font.pixelSize: WxTheme.fontSizeTiny
             color: WxTheme.clTextHint
+            verticalAlignment: Text.AlignVCenter
         }
     }
 
@@ -67,12 +73,14 @@ Rectangle {
         visible: root.expanded
 
         RowLayout {
-            spacing: 4
+            spacing: 6
             Layout.fillWidth: true
 
-            Text {
-                text: root.status === "success" ? "✅" : "❌"
-                font.pixelSize: 12
+            WxIcon {
+                iconSource: root.status === "success" ? "../icons/success.svg" : "../icons/error.svg"
+                iconSize: 14
+                hoverScale: false
+                Layout.alignment: Qt.AlignVCenter
             }
 
             Text {
@@ -81,6 +89,7 @@ Rectangle {
                 font.pixelSize: WxTheme.fontSizeLog
                 color: root.status === "success" ? WxTheme.clLogOk : WxTheme.clLogErr
                 Layout.fillWidth: true
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
@@ -88,6 +97,7 @@ Rectangle {
                 font.family: WxTheme.fontFamily
                 font.pixelSize: WxTheme.fontSizeTiny
                 color: WxTheme.clTextHint
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
@@ -105,6 +115,31 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: root.expanded = !root.expanded
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.RightButton) {
+                logContextMenu.popup()
+            } else {
+                root.expanded = !root.expanded
+            }
+        }
+    }
+
+    // 右键上下文菜单
+    WxContextMenu {
+        id: logContextMenu
+        WxContextMenuItem {
+            text: "复制当前日志行"
+            iconSource: "../icons/file.svg"
+            onTriggered: {
+                if (root.itemBackend) {
+                    var statusText = root.status === "success" ? "成功" : "失败"
+                    var detailText = root.detail ? (" | 详情: " + root.detail) : ""
+                    var logLine = "[" + root.timestamp + "] 好友: " + root.friendName + " | 状态: " + statusText + detailText
+                    root.itemBackend.copy_to_clipboard(logLine)
+                    root.itemBackend.showToast("已复制日志到剪贴板", "success")
+                }
+            }
+        }
     }
 }

@@ -1,14 +1,28 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
+import QtQuick.Dialogs
+import QtCore
 import "../theme"
 
 Rectangle {
     id: root
 
     property var panelBackend: null
+    
+    // 统计数据
+    property int successCount: 0
+    property int failureCount: 0
+    property int elapsedTime: 0
 
     color: WxTheme.clBgPrimary
+
+    Timer {
+        id: elapsedTimer
+        interval: 1000
+        repeat: true
+        onTriggered: root.elapsedTime += 1
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -97,6 +111,32 @@ Rectangle {
             }
         }
 
+        // ── 发送总结卡片 ──
+        TaskSummaryCard {
+            id: summaryCard
+            Layout.fillWidth: true
+            Layout.preferredHeight: 140
+            Layout.minimumHeight: 140
+            visible: panelBackend ? (panelBackend.phase === "done" && logModelList.count > 0) : false
+            
+            isCompleted: panelBackend ? (panelBackend.progressStatus.indexOf("停止") === -1 && panelBackend.progressStatus.indexOf("错误") === -1) : true
+            successCount: root.successCount
+            failureCount: root.failureCount
+            elapsedTime: root.elapsedTime
+            fileCount: panelBackend ? panelBackend.filePaths.length : 0
+
+            onClearLogsRequested: {
+                logModelList.clear()
+                root.successCount = 0
+                root.failureCount = 0
+                root.elapsedTime = 0
+            }
+
+            onExportLogsRequested: {
+                exportFileDialog.open()
+            }
+        }
+
         // ── 日志区 ──
         Rectangle {
             Layout.fillWidth: true
@@ -160,15 +200,64 @@ Rectangle {
                 "detail": detail,
                 "timestamp": ts
             })
+
+            if (status === "success") {
+                root.successCount += 1
+            } else if (status === "error") {
+                root.failureCount += 1
+            }
         }
     }
 
-    // 重置时清空日志
+    // 重置与定时器状态监听
     Connections {
         target: panelBackend
         function onPhaseChanged(phase) {
             if (phase === "idle") {
                 logModelList.clear()
+                root.successCount = 0
+                root.failureCount = 0
+                root.elapsedTime = 0
+                elapsedTimer.stop()
+            } else if (phase === "running") {
+                elapsedTimer.start()
+            } else if (phase === "paused") {
+                elapsedTimer.stop()
+            } else if (phase === "done") {
+                elapsedTimer.stop()
+            }
+        }
+    }
+
+    // 日志导出对话框
+    FileDialog {
+        id: exportFileDialog
+        title: "选择日志导出路径"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Text files (*.txt)"]
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        onAccepted: {
+            if (panelBackend) {
+                var logLines = []
+                logLines.push("=== 五阿哥群发助手发送日志 ===")
+                logLines.push("任务完成状态: " + (summaryCard.isCompleted ? "全部完成" : "用户中止/未完成"))
+                logLines.push("成功数: " + root.successCount + " 人")
+                logLines.push("失败数: " + root.failureCount + " 人")
+                logLines.push("总耗时: " + summaryCard.formatTime(root.elapsedTime))
+                logLines.push("附加文件: " + (panelBackend ? panelBackend.filePaths.join(", ") : "无"))
+                logLines.push("--------------------------------")
+                for (var i = 0; i < logModelList.count; i++) {
+                    var item = logModelList.get(i)
+                    logLines.push("[" + item.timestamp + "] 好友: " + item.friendName + " | 状态: " + (item.status === "success" ? "成功" : "失败") + " | 详情: " + item.detail)
+                }
+                var formattedLogs = logLines.join("\n")
+                
+                var success = panelBackend.export_logs(exportFileDialog.selectedFile.toString(), formattedLogs)
+                if (success) {
+                    panelBackend.showToast("日志导出成功！", "success")
+                } else {
+                    panelBackend.showToast("日志导出失败！", "error")
+                }
             }
         }
     }

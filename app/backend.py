@@ -43,6 +43,9 @@ class BackendController(QObject):
     useForwardChanged = Signal(bool)
     filePathsChanged = Signal(list)
     fileSizesChanged = Signal(list)
+    sendIntervalMinChanged = Signal(float)
+    sendIntervalMaxChanged = Signal(float)
+    showToast = Signal(str, str)
 
     def __init__(self, version: str = "0.2.1", parent=None):
         super().__init__(parent)
@@ -67,6 +70,8 @@ class BackendController(QObject):
         self._version = version
         self._inputs_enabled = True
         self._demo_mode = is_demo_mode()
+        self._send_interval_min = 2.0
+        self._send_interval_max = 3.0
 
         # ── 发送状态 ──
         self._worker: SenderWorker | None = None
@@ -222,6 +227,28 @@ class BackendController(QObject):
 
     demoMode = Property(bool, _get_demo_mode, notify=demoModeChanged)
 
+    # ── sendIntervalMin ──
+    def _get_send_interval_min(self) -> float:
+        return self._send_interval_min
+
+    def _set_send_interval_min(self, value: float):
+        if self._send_interval_min != value:
+            self._send_interval_min = value
+            self.sendIntervalMinChanged.emit(value)
+
+    sendIntervalMin = Property(float, _get_send_interval_min, _set_send_interval_min, notify=sendIntervalMinChanged)
+
+    # ── sendIntervalMax ──
+    def _get_send_interval_max(self) -> float:
+        return self._send_interval_max
+
+    def _set_send_interval_max(self, value: float):
+        if self._send_interval_max != value:
+            self._send_interval_max = value
+            self.sendIntervalMaxChanged.emit(value)
+
+    sendIntervalMax = Property(float, _get_send_interval_max, _set_send_interval_max, notify=sendIntervalMaxChanged)
+
     # ═══════════════════════════════════════
     #  工具方法
     # ═══════════════════════════════════════
@@ -322,6 +349,8 @@ class BackendController(QObject):
         self._progress_status = "运行中"
         self.progressStatusChanged.emit(self._progress_status)
 
+        self._worker.send_interval_min = self._send_interval_min
+        self._worker.send_interval_max = self._send_interval_max
         self._worker.start()
 
     @Slot()
@@ -413,6 +442,72 @@ class BackendController(QObject):
             self.fileSizesChanged.emit(list(self._file_sizes))
             self._update_preview()
 
+    @Slot(str, str, result=bool)
+    def export_logs(self, file_url: str, log_content: str) -> bool:
+        """安全地将格式化的日志写入到本地文本文件。"""
+        try:
+            path = file_url.replace("file:///", "")
+            if sys.platform == "win32":
+                path = path.lstrip("/")
+            
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+            
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(log_content)
+            return True
+        except Exception as e:
+            print(f"Error exporting logs: {e}", file=sys.stderr)
+            return False
+
+    @Slot(str)
+    def open_file(self, file_url: str):
+        """打开指定的文件。"""
+        try:
+            path = file_url.replace("file:///", "")
+            if sys.platform == "win32":
+                path = path.lstrip("/")
+                os.startfile(path)
+            else:
+                import subprocess
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call([opener, path])
+        except Exception as e:
+            print(f"Error opening file: {e}", file=sys.stderr)
+
+    @Slot(str)
+    def open_file_folder(self, file_url: str):
+        """打开文件所在的目录，并在 Windows 下尽量选中该文件。"""
+        try:
+            path = file_url.replace("file:///", "")
+            if sys.platform == "win32":
+                path = path.lstrip("/")
+                windows_path = os.path.normpath(path)
+                import subprocess
+                subprocess.run(f'explorer /select,"{windows_path}"', shell=True)
+            else:
+                folder = os.path.dirname(path)
+                import subprocess
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call([opener, folder])
+        except Exception as e:
+            print(f"Error opening file folder: {e}", file=sys.stderr)
+
+    @Slot(str)
+    def copy_to_clipboard(self, text: str):
+        """将文本复制到系统剪贴板。"""
+        try:
+            from PySide6.QtGui import QGuiApplication
+            app = QGuiApplication.instance()
+            if app is not None:
+                clipboard = QGuiApplication.clipboard()
+                if clipboard is not None:
+                    clipboard.setText(text)
+                    return
+            print("Clipboard not available: QGuiApplication is not fully initialized", file=sys.stderr)
+        except Exception as e:
+            print(f"Error copying to clipboard: {e}", file=sys.stderr)
+
     # ═══════════════════════════════════════
     #  内部 slot（接收 worker 信号）
     # ═══════════════════════════════════════
@@ -451,11 +546,14 @@ class BackendController(QObject):
 
     @Slot()
     def _on_send_finished(self):
-        if self._phase in (PHASE_RUNNING, PHASE_PAUSED):
+        was_running = self._phase in (PHASE_RUNNING, PHASE_PAUSED)
+        if was_running:
             self._set_phase(PHASE_DONE)
         self._set_inputs_enabled(True)
         self._progress_status = "已结束"
         self.progressStatusChanged.emit(self._progress_status)
+        if was_running:
+            self.showToast.emit("发送任务完成！", "success")
 
     def _set_inputs_enabled(self, enabled: bool):
         self._inputs_enabled = enabled

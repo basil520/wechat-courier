@@ -285,3 +285,77 @@ class TestBackendSignals:
             backend._on_send_finished()
         assert backend.phase == PHASE_DONE
         assert backend.inputsEnabled is True
+
+
+class TestBackendPhase3:
+    def test_send_intervals(self, backend, qtbot):
+        # Default values
+        assert backend.sendIntervalMin == 2.0
+        assert backend.sendIntervalMax == 3.0
+
+        # Change min interval
+        with qtbot.waitSignal(backend.sendIntervalMinChanged, timeout=1000) as blocker:
+            backend.sendIntervalMin = 5.0
+        assert backend.sendIntervalMin == 5.0
+        assert blocker.args == [5.0]
+
+        # Change max interval
+        with qtbot.waitSignal(backend.sendIntervalMaxChanged, timeout=1000) as blocker:
+            backend.sendIntervalMax = 10.0
+        assert backend.sendIntervalMax == 10.0
+        assert blocker.args == [10.0]
+
+    def test_export_logs_success(self, backend, tmp_path):
+        log_file = tmp_path / "test_export_logs.txt"
+        log_url = f"file:///{log_file.as_posix()}"
+        content = "test log content string"
+        
+        success = backend.export_logs(log_url, content)
+        assert success is True
+        assert log_file.exists()
+        assert log_file.read_text(encoding="utf-8") == content
+
+    def test_export_logs_invalid_path_returns_false(self, backend):
+        # Using a completely invalid path that cannot be written to
+        invalid_url = "file:///invalid_drive_letter_xyz:/nonexistent/dir/file.txt"
+        success = backend.export_logs(invalid_url, "content")
+        assert success is False
+
+    def test_open_file_safely(self, backend, monkeypatch):
+        import sys
+        opened_paths = []
+        if sys.platform == "win32":
+            import os
+            monkeypatch.setattr(os, "startfile", lambda path: opened_paths.append(path))
+        else:
+            import subprocess
+            monkeypatch.setattr(subprocess, "call", lambda args: opened_paths.append(args[1]))
+
+        backend.open_file("file:///d:/some/path/file.txt")
+        assert len(opened_paths) == 1
+        assert "file.txt" in opened_paths[0].replace("\\", "/")
+
+    def test_open_file_folder_safely(self, backend, monkeypatch):
+        import sys
+        run_args = []
+        if sys.platform == "win32":
+            import subprocess
+            monkeypatch.setattr(subprocess, "run", lambda cmd, **kwargs: run_args.append(cmd))
+        else:
+            import subprocess
+            monkeypatch.setattr(subprocess, "call", lambda args: run_args.append(args[1]))
+
+        backend.open_file_folder("file:///d:/some/path/file.txt")
+        assert len(run_args) == 1
+
+    def test_copy_to_clipboard(self, backend, monkeypatch):
+        # Mock QGuiApplication.clipboard to prevent native access violation in headless environments
+        from PySide6.QtGui import QGuiApplication
+        copied_text = []
+        class MockClipboard:
+            def setText(self, text):
+                copied_text.append(text)
+        
+        monkeypatch.setattr(QGuiApplication, "clipboard", lambda: MockClipboard())
+        backend.copy_to_clipboard("test clip content")
+        assert copied_text == ["test clip content"]

@@ -27,6 +27,8 @@ class SenderWorker(QThread):
         self.message_template: str = ""
         self.file_paths: list[str] = []
         self.use_forward: bool = False
+        self.send_interval_min: float = 2.0
+        self.send_interval_max: float = 3.0
 
     # ── 控制 API（主线程调用） ──
 
@@ -89,6 +91,22 @@ class SenderWorker(QThread):
             # 检查暂停（忙等待，100ms 间隔）
             while self._pause_flag and not self._stop_flag:
                 self.msleep(100)
+
+            if self._stop_flag:
+                break
+
+            # 随机延迟，支持高频轮询以便即时响应停止/暂停
+            if idx > 0:
+                import random
+                sleep_dur = random.uniform(self.send_interval_min, self.send_interval_max)
+                slept = 0.0
+                while slept < sleep_dur and not self._stop_flag:
+                    while self._pause_flag and not self._stop_flag:
+                        self.msleep(100)
+                    if self._stop_flag:
+                        break
+                    self.msleep(100)
+                    slept += 0.1
 
             if self._stop_flag:
                 break

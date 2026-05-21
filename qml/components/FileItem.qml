@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic
 import "../theme"
 
 Rectangle {
@@ -9,19 +10,54 @@ Rectangle {
     property string fileSize: ""
     property string fileType: "other"   // "pdf" / "image" / "doc" / "other"
     property int fileIndex: -1
+    property string filePath: ""
+    property var itemBackend: null
 
     signal removeRequested(int index)
 
-    height: 32
+    // 是否处于删除动画阶段
+    property bool isDeleting: false
+
+    // 高度与透明度缩折动画
+    height: isDeleting ? 0 : 32
+    opacity: isDeleting ? 0.0 : 1.0
+    clip: true
+
+    Behavior on height {
+        id: heightBehavior
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+            onRunningChanged: {
+                if (!running && root.isDeleting) {
+                    root.removeRequested(root.fileIndex)
+                }
+            }
+        }
+    }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
+    }
+
     radius: WxTheme.radiusSmall
     color: mouseArea.containsMouse ? WxTheme.clBgHover : WxTheme.clBgPrimary
     border.width: 1
-    border.color: WxTheme.clBorder
+    border.color: mouseArea.containsMouse ? WxTheme.clPrimary : WxTheme.clBorder
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.RightButton) {
+                fileContextMenu.popup()
+            }
+        }
     }
 
     RowLayout {
@@ -30,34 +66,18 @@ Rectangle {
         anchors.rightMargin: WxTheme.spSmall
         spacing: WxTheme.spSmall
 
-        // 文件类型图标
-        Rectangle {
-            width: 20
-            height: 20
-            radius: WxTheme.radiusSmall
-            color: {
-                switch (root.fileType) {
-                    case "pdf": return "#e74c3c"
-                    case "image": return "#3498db"
-                    case "doc": return "#f39c12"
-                    default: return "#95a5a6"
+        // 文件类型图标 (矢量 SVG)
+        WxIcon {
+            iconSize: 20
+            hoverScale: false
+            iconSource: {
+                switch (root.fileType.toLowerCase()) {
+                    case "pdf": return "../icons/pdf.svg"
+                    case "image": case "img": return "../icons/image.svg"
+                    case "doc": case "docx": case "word": return "../icons/word.svg"
+                    case "xls": case "xlsx": case "excel": return "../icons/excel.svg"
+                    default: return "../icons/file.svg"
                 }
-            }
-
-            Text {
-                anchors.centerIn: parent
-                text: {
-                    switch (root.fileType) {
-                        case "pdf": return "PDF"
-                        case "image": return "IMG"
-                        case "doc": return "DOC"
-                        default: return "FILE"
-                    }
-                }
-                font.family: WxTheme.fontFamily
-                font.pixelSize: 8
-                color: "#ffffff"
-                font.bold: true
             }
         }
 
@@ -85,18 +105,56 @@ Rectangle {
         }
 
         // 删除按钮（hover 时显示）
-        Text {
-            text: "✕"
-            font.family: WxTheme.fontFamily
-            font.pixelSize: WxTheme.fontSizeNormal
-            color: mouseArea.containsMouse ? WxTheme.clDangerNew : "transparent"
+        WxIcon {
+            iconSource: "../icons/trash.svg"
+            iconSize: 14
+            iconColor: mouseArea.containsMouse ? WxTheme.clTextHint : "transparent"
+            hoverColor: WxTheme.clDangerNew
+            hoverScale: true
 
             MouseArea {
-                width: 20
-                height: 20
-                anchors.centerIn: parent
-                z: 1
-                onClicked: root.removeRequested(root.fileIndex)
+                anchors.fill: parent
+                onClicked: {
+                    root.isDeleting = true
+                }
+            }
+        }
+    }
+
+    // 右键上下文菜单
+    WxContextMenu {
+        id: fileContextMenu
+        WxContextMenuItem {
+            text: "打开文件"
+            iconSource: "../icons/play.svg"
+            onTriggered: {
+                if (root.itemBackend && root.filePath !== "") {
+                    root.itemBackend.open_file(root.filePath)
+                }
+            }
+        }
+        WxContextMenuItem {
+            text: "打开所在文件夹"
+            iconSource: "../icons/export.svg"
+            onTriggered: {
+                if (root.itemBackend && root.filePath !== "") {
+                    root.itemBackend.open_file_folder(root.filePath)
+                }
+            }
+        }
+        MenuSeparator {
+            background: Rectangle {
+                implicitHeight: 1
+                color: WxTheme.clDivider
+            }
+        }
+        WxContextMenuItem {
+            text: "从列表中移除"
+            iconSource: "../icons/trash.svg"
+            iconColor: WxTheme.clDangerNew
+            hoverIconColor: WxTheme.clDangerNewHover
+            onTriggered: {
+                root.isDeleting = true
             }
         }
     }
