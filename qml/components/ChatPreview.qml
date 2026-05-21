@@ -100,7 +100,7 @@ Rectangle {
                 // Text Bubble (Outgoing, right-aligned)
                 Row {
                     width: chatColumn.width
-                    visible: panelBackend ? panelBackend.previewFriend !== "" : false
+                    visible: panelBackend ? (panelBackend.previewFriend !== "" && panelBackend.previewMessage !== "") : false
                     layoutDirection: Qt.RightToLeft
                     spacing: 0
                     rightPadding: 16

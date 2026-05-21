@@ -273,13 +273,19 @@ class BackendController(QObject):
         template = self._template_text.strip()
         friends_list = [f.strip() for f in friends_raw.split("\n") if f.strip()]
 
-        if not friends_list or not template:
+        has_files = len(self._file_paths) > 0
+
+        if not friends_list or (not template and not has_files):
             self._preview_friend = ""
             self._preview_greeting = ""
             self._preview_message = "请在左侧输入名单和消息模板即可在此预览效果"
+            self._preview_file_names = []
+            self._preview_file_count = 0
             self.previewFriendChanged.emit("")
             self.previewGreetingChanged.emit("")
             self.previewMessageChanged.emit(self._preview_message)
+            self.previewFileNamesChanged.emit([])
+            self.previewFileCountChanged.emit(0)
             return
 
         first_friend = friends_list[0]
@@ -287,11 +293,14 @@ class BackendController(QObject):
         self._preview_friend = first_friend
         self._preview_greeting = greeting
 
-        try:
-            preview_msg = template.format(name=greeting)
-            self._preview_message = preview_msg
-        except (KeyError, ValueError):
-            self._preview_message = "消息模板格式有误，请确保仅使用了 {name} 作为占位符"
+        if template:
+            try:
+                preview_msg = template.format(name=greeting)
+                self._preview_message = preview_msg
+            except (KeyError, ValueError):
+                self._preview_message = "消息模板格式有误，请确保仅使用了 {name} 作为占位符"
+        else:
+            self._preview_message = ""
 
         self.previewFriendChanged.emit(self._preview_friend)
         self.previewGreetingChanged.emit(self._preview_greeting)

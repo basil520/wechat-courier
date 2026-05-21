@@ -71,6 +71,15 @@ class TestBackendInputs:
         backend.templateText = "{invalid}"
         assert "格式有误" in backend.previewMessage
 
+    def test_preview_only_files_no_template(self, backend):
+        backend.friendListText = "王小明"
+        backend.templateText = ""
+        backend.add_file_path("file:///C:/test/file1.png")
+        assert backend.previewFriend == "王小明"
+        assert backend.previewMessage == ""
+        assert backend.previewFileNames == ["file1.png"]
+        assert backend.previewFileCount == 1
+
     def test_friend_list_text_clears_fatal_error(self, backend, qtbot):
         backend.friendListText = ""
         backend.templateText = ""
