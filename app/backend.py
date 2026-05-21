@@ -594,7 +594,7 @@ class BackendController(QObject):
         """同步 QML 主题到原生 Windows DWM，设置沉浸式顶栏并启用 Acrylic 亚克力背景"""
         if sys.platform != "win32":
             return
-        # 1. 强制应用沉浸式暗色模式边框/标题栏
+        # 1. 强制应用沉浸式暗色模式边框/标题栏 (兼容 Win10/Win11)
         win32_helper.set_immersive_dark_mode(hwnd, is_dark)
-        # 2. 设置原生 Windows 11 亚克力毛玻璃背景材质 (DWMSBT_ACRYLIC = 3)
-        win32_helper.set_window_backdrop(hwnd, win32_helper.DWMSBT_ACRYLIC)
+        # 2. 智能应用亚克力磨砂玻璃背景材质 (兼容 Win10/Win11)
+        win32_helper.apply_acrylic_effect(hwnd, is_dark)
