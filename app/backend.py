@@ -46,6 +46,7 @@ class BackendController(QObject):
     sendIntervalMinChanged = Signal(float)
     sendIntervalMaxChanged = Signal(float)
     showToast = Signal(str, str)
+    previewIndexChanged = Signal(int)
 
     def __init__(self, version: str = "0.2.1", parent=None):
         super().__init__(parent)
@@ -66,6 +67,7 @@ class BackendController(QObject):
         self._preview_message = ""
         self._preview_file_names: list[str] = []
         self._preview_file_count = 0
+        self._preview_index = 0
         self._fatal_error = ""
         self._version = version
         self._inputs_enabled = True
@@ -203,6 +205,18 @@ class BackendController(QObject):
 
     previewFileCount = Property(int, _get_preview_file_count, notify=previewFileCountChanged)
 
+    # ── previewIndex ──
+    def _get_preview_index(self) -> int:
+        return self._preview_index
+
+    def _set_preview_index(self, value: int):
+        if self._preview_index != value:
+            self._preview_index = value
+            self.previewIndexChanged.emit(value)
+            self._update_preview()
+
+    previewIndex = Property(int, _get_preview_index, _set_preview_index, notify=previewIndexChanged)
+
     # ── fatalError ──
     def _get_fatal_error(self) -> str:
         return self._fatal_error
@@ -288,9 +302,15 @@ class BackendController(QObject):
             self.previewFileCountChanged.emit(0)
             return
 
-        first_friend = friends_list[0]
-        greeting = extract_greeting_name(first_friend)
-        self._preview_friend = first_friend
+        # Clamp self._preview_index to valid range
+        idx = max(0, min(self._preview_index, len(friends_list) - 1))
+        if idx != self._preview_index:
+            self._preview_index = idx
+            self.previewIndexChanged.emit(idx)
+
+        selected_friend = friends_list[idx]
+        greeting = extract_greeting_name(selected_friend)
+        self._preview_friend = selected_friend
         self._preview_greeting = greeting
 
         if template:

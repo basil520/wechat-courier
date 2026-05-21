@@ -80,6 +80,31 @@ class TestBackendInputs:
         assert backend.previewFileNames == ["file1.png"]
         assert backend.previewFileCount == 1
 
+    def test_preview_index_switching(self, backend):
+        backend.friendListText = "Alice\nBob\nCharlie"
+        backend.templateText = "Hi {name}"
+        assert backend.previewIndex == 0
+        assert backend.previewFriend == "Alice"
+        assert backend.previewMessage == "Hi Alice"
+
+        backend.previewIndex = 1
+        assert backend.previewFriend == "Bob"
+        assert backend.previewMessage == "Hi Bob"
+
+        backend.previewIndex = 2
+        assert backend.previewFriend == "Charlie"
+        assert backend.previewMessage == "Hi Charlie"
+
+        # Out of bounds clamping check
+        backend.previewIndex = 10
+        assert backend.previewIndex == 2
+        assert backend.previewFriend == "Charlie"
+
+        # Shrinking list clamps index
+        backend.friendListText = "Alice"
+        assert backend.previewIndex == 0
+        assert backend.previewFriend == "Alice"
+
     def test_friend_list_text_clears_fatal_error(self, backend, qtbot):
         backend.friendListText = ""
         backend.templateText = ""

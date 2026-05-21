@@ -35,15 +35,48 @@ Rectangle {
                 anchors.rightMargin: 16
                 spacing: 8
 
-                Text {
-                    text: panelBackend && panelBackend.previewFriend !== "" 
-                        ? panelBackend.previewFriend 
-                        : "微信消息预览"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeTitle
-                    font.bold: true
-                    color: WxTheme.clTextPrimary
+                // Clickable Area for Title Selector
+                Item {
+                    id: titleClickContainer
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    RowLayout {
+                        id: clickableTitleRow
+                        anchors.fill: parent
+                        spacing: 4
+
+                        Text {
+                            text: panelBackend && panelBackend.previewFriend !== "" 
+                                ? panelBackend.previewFriend 
+                                : "微信消息预览"
+                            font.family: WxTheme.fontFamily
+                            font.pixelSize: WxTheme.fontSizeTitle
+                            font.bold: true
+                            color: WxTheme.clTextPrimary
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: parent.width - 48
+                        }
+
+                        // Emerald green small down arrow icon if selectable
+                        Text {
+                            text: "▾"
+                            font.pixelSize: 16
+                            color: WxTheme.clPrimary
+                            font.bold: true
+                            visible: panelBackend && panelBackend.previewFriend !== ""
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        enabled: panelBackend && panelBackend.previewFriend !== ""
+                        hoverEnabled: enabled
+                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: {
+                            previewSelectorPopup.open()
+                        }
+                    }
                 }
 
                 // Options triple-dots icon
@@ -265,6 +298,109 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: panelBackend && panelBackend.previewFriend !== ""
                             cursorShape: panelBackend && panelBackend.previewFriend !== "" ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── 4. 预览好友选择弹窗 (Preview Contact Selector Popup) ──
+    Popup {
+        id: previewSelectorPopup
+        y: mockHeader.height + 4
+        x: 16
+        width: Math.min(240, parent.width - 32)
+        height: Math.min(220, friendSelectionList.count * 32 + 50)
+        padding: 8
+        modal: false
+        focus: true
+
+        background: Rectangle {
+            color: WxTheme.isDark ? "#1c2024" : "#ffffff"
+            border.color: WxTheme.clBorder
+            border.width: 1
+            radius: WxTheme.radiusMedium
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 8
+
+            Text {
+                text: "选择要预览的好友"
+                font.family: WxTheme.fontFamily
+                font.pixelSize: WxTheme.fontSizeTiny
+                font.bold: true
+                color: WxTheme.clTextHint
+                Layout.leftMargin: 8
+                Layout.topMargin: 4
+            }
+
+            ListView {
+                id: friendSelectionList
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(150, friendSelectionList.count * 32)
+                clip: true
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                model: {
+                    if (!panelBackend || panelBackend.friendListText.trim() === "") return []
+                    var lines = panelBackend.friendListText.split("\n")
+                    var list = []
+                    for (var i = 0; i < lines.length; i++) {
+                        var cleaned = lines[i].trim()
+                        if (cleaned !== "") {
+                            list.push({ "name": cleaned, "index": i })
+                        }
+                    }
+                    return list
+                }
+
+                delegate: Rectangle {
+                    width: friendSelectionList.width
+                    height: 32
+                    radius: WxTheme.radiusSmall
+                    color: modelData.index === (panelBackend ? panelBackend.previewIndex : 0)
+                        ? WxTheme.clBgSelected
+                        : (mouseArea.containsMouse ? (WxTheme.isDark ? "#282d35" : "#f5f5f5") : "transparent")
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+
+                        Text {
+                            text: modelData.name
+                            font.family: WxTheme.fontFamily
+                            font.pixelSize: WxTheme.fontSizeNormal - 1
+                            font.bold: modelData.index === (panelBackend ? panelBackend.previewIndex : 0)
+                            color: modelData.index === (panelBackend ? panelBackend.previewIndex : 0)
+                                ? WxTheme.clPrimary
+                                : WxTheme.clTextPrimary
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+
+                        Rectangle {
+                            width: 6
+                            height: 6
+                            radius: 3
+                            color: WxTheme.clPrimary
+                            visible: modelData.index === (panelBackend ? panelBackend.previewIndex : 0)
+                        }
+                    }
+
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (panelBackend) {
+                                panelBackend.previewIndex = modelData.index
+                            }
+                            previewSelectorPopup.close()
                         }
                     }
                 }
