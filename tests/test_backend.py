@@ -205,6 +205,14 @@ class TestBackendFileManagement:
         backend.remove_file_at(99)
         assert len(backend.filePaths) == 1
 
+    def test_get_file_size_at(self, backend):
+        backend.add_file_path("file:///C:/test/a.pdf")
+        # 由于路径不存在，大小应该获取返回默认的空字符串，但位置有效
+        assert backend.get_file_size_at(0) == ""
+        # 越界获取应安全返回空字符串
+        assert backend.get_file_size_at(99) == ""
+        assert backend.get_file_size_at(-1) == ""
+
     def test_reset_clears_files(self, backend):
         backend.add_file_path("file:///C:/test/a.pdf")
         backend.add_file_path("file:///C:/test/b.pdf")

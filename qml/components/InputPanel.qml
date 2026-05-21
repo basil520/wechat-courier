@@ -208,8 +208,7 @@ Rectangle {
                         var p = (typeof model.display === "string") ? model.display : ""
                         return p.split("/").pop().split("\\").pop()
                     }
-                    fileSize: panelBackend && panelBackend.fileSizes.length > index
-                              ? panelBackend.fileSizes[index] : ""
+                    fileSize: panelBackend ? panelBackend.get_file_size_at(index) : ""
                     fileType: {
                         var name = fileName.toLowerCase()
                         if (name.endsWith(".pdf")) return "pdf"

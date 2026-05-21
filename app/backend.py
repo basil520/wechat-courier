@@ -374,6 +374,13 @@ class BackendController(QObject):
         self.fileSizesChanged.emit([])
         self._update_preview()
 
+    @Slot(int, result=str)
+    def get_file_size_at(self, index: int) -> str:
+        """安全地获取指定索引的文件大小，避免 QML 异步访问越界或类型转换问题。"""
+        if 0 <= index < len(self._file_sizes):
+            return self._file_sizes[index]
+        return ""
+
     @Slot(str)
     def add_file_path(self, file_url: str):
         """从 QML FileDialog 接收文件路径（file:/// 前缀需移除）。"""
