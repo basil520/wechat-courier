@@ -60,8 +60,12 @@ Rectangle {
                 value: barBackend ? Math.round(barBackend.sendIntervalMin) : 2
                 enabled: barBackend ? barBackend.inputsEnabled : false
                 onValueModified: function(newValue) {
-                    if (barBackend) barBackend.sendIntervalMin = newValue
-                    if (maxSpin.value < newValue) maxSpin.value = newValue
+                    if (barBackend) {
+                        barBackend.sendIntervalMin = newValue
+                        if (barBackend.sendIntervalMax < newValue) {
+                            barBackend.sendIntervalMax = newValue
+                        }
+                    }
                 }
             }
 
@@ -79,8 +83,12 @@ Rectangle {
                 value: barBackend ? Math.round(barBackend.sendIntervalMax) : 3
                 enabled: barBackend ? barBackend.inputsEnabled : false
                 onValueModified: function(newValue) {
-                    if (barBackend) barBackend.sendIntervalMax = newValue
-                    if (minSpin.value > newValue) minSpin.value = newValue
+                    if (barBackend) {
+                        barBackend.sendIntervalMax = newValue
+                        if (barBackend.sendIntervalMin > newValue) {
+                            barBackend.sendIntervalMin = newValue
+                        }
+                    }
                 }
             }
 

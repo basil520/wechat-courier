@@ -12,6 +12,16 @@ Item {
     signal startRequested()
 
     height: 32
+    implicitHeight: 32
+    implicitWidth: {
+        switch (phase) {
+            case "idle": return _btnWidth
+            case "running": return _btnWidth * 2 + WxTheme.spSmall
+            case "paused": return _btnWidth * 2 + WxTheme.spSmall
+            case "done": return _btnWidth
+            default: return _btnWidth
+        }
+    }
 
     // 统一按钮宽度（以最长文字"开始发送"为基准）
     property int _btnWidth: 96

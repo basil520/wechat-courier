@@ -47,8 +47,7 @@ Rectangle {
                 hoverEnabled: true
                 onClicked: {
                     if (root.value > root.from) {
-                        root.value = Math.max(root.from, root.value - root.stepSize)
-                        root.valueModified(root.value)
+                        root.valueModified(Math.max(root.from, root.value - root.stepSize))
                     }
                 }
             }
@@ -108,8 +107,7 @@ Rectangle {
                 hoverEnabled: true
                 onClicked: {
                     if (root.value < root.to) {
-                        root.value = Math.min(root.to, root.value + root.stepSize)
-                        root.valueModified(root.value)
+                        root.valueModified(Math.min(root.to, root.value + root.stepSize))
                     }
                 }
             }

@@ -72,7 +72,6 @@ Rectangle {
                     anchors.fill: parent
                     onClicked: {
                         if (root.currentIndex !== index) {
-                            root.currentIndex = index
                             root.tabClicked(index)
                         }
                     }

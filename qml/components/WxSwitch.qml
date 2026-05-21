@@ -55,8 +55,7 @@ RowLayout {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                root.checked = !root.checked
-                root.toggled(root.checked)
+                root.toggled(!root.checked)
             }
         }
     }
