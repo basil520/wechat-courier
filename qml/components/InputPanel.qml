@@ -472,6 +472,7 @@ Rectangle {
                             iconSize: 20
                             iconColor: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextHint
                             hoverScale: false
+                            Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
@@ -479,6 +480,7 @@ Rectangle {
                             font.family: WxTheme.fontFamily
                             font.pixelSize: WxTheme.fontSizeTiny
                             color: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextSecondary
+                            Layout.alignment: Qt.AlignHCenter
                         }
                     }
                 }
