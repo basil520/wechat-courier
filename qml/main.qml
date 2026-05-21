@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 import QtQuick.Window
 import "components"
 import "theme"
@@ -14,22 +15,33 @@ ApplicationWindow {
     visible: true
     title: "五阿哥群发助手"
     color: "transparent"
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinMaxButtonsHint
 
     background: Rectangle {
-        color: WxTheme.isDark ? "#cc16191c" : "#e6ffffff"
+        color: WxTheme.clWindowTint
         Behavior on color {
             ColorAnimation { duration: WxTheme.animSlow }
         }
     }
 
-    // 监听主题变化，调用后端 Win32 API 动态刷新原生边框及背景材质
+    function syncWindowVisuals() {
+        if (typeof backend !== "undefined" && backend) {
+            backend.updateWindowVisuals(root.winId(), WxTheme.isDark, WxTheme.glassEnabled, WxTheme.glassOpacity)
+        }
+    }
+
+    // 监听窗口视觉变化，调用后端 Win32 API 动态刷新原生材质
     Connections {
         target: WxTheme
         ignoreUnknownSignals: true
         function onIsDarkChanged() {
-            if (typeof backend !== "undefined" && backend) {
-                backend.updateThemeMode(root.winId(), WxTheme.isDark)
-            }
+            root.syncWindowVisuals()
+        }
+        function onGlassEnabledChanged() {
+            root.syncWindowVisuals()
+        }
+        function onGlassOpacityChanged() {
+            root.syncWindowVisuals()
         }
     }
 
@@ -39,7 +51,9 @@ ApplicationWindow {
         root.y = (Screen.height - root.height) / 2
         if (typeof backend !== "undefined" && backend) {
             root.title = backend.versionInfo
-            backend.updateThemeMode(root.winId(), WxTheme.isDark)
+            WxTheme.glassEnabled = backend.glassEnabled
+            WxTheme.glassOpacity = backend.glassOpacity
+            root.syncWindowVisuals()
         }
     }
 
@@ -69,9 +83,22 @@ ApplicationWindow {
         onConfirmed: Qt.quit()
     }
 
-    App {
+    ColumnLayout {
         anchors.fill: parent
-        appBackend: typeof backend !== "undefined" ? backend : null
+        spacing: 0
+
+        WxTitleBar {
+            id: customTitleBar
+            Layout.fillWidth: true
+            window: root
+            titleBackend: typeof backend !== "undefined" ? backend : null
+        }
+
+        App {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            appBackend: typeof backend !== "undefined" ? backend : null
+        }
     }
 
     // 全局 Toast 提示
@@ -84,6 +111,91 @@ ApplicationWindow {
         function onShowToast(message, type) {
             globalToast.show(message, type)
         }
+    }
+
+    component ResizeHandle: MouseArea {
+        property int resizeEdges: Qt.LeftEdge
+
+        hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
+        z: 9000
+        onPressed: {
+            if (root.visibility !== Window.FullScreen) {
+                root.startSystemResize(resizeEdges)
+            }
+        }
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.LeftEdge
+        width: 6
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeHorCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.RightEdge
+        width: 6
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeHorCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.TopEdge
+        height: 6
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        cursorShape: Qt.SizeVerCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.BottomEdge
+        height: 6
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeVerCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.LeftEdge | Qt.TopEdge
+        width: 10
+        height: 10
+        anchors.left: parent.left
+        anchors.top: parent.top
+        cursorShape: Qt.SizeFDiagCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.RightEdge | Qt.TopEdge
+        width: 10
+        height: 10
+        anchors.right: parent.right
+        anchors.top: parent.top
+        cursorShape: Qt.SizeBDiagCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.LeftEdge | Qt.BottomEdge
+        width: 10
+        height: 10
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeBDiagCursor
+    }
+
+    ResizeHandle {
+        resizeEdges: Qt.RightEdge | Qt.BottomEdge
+        width: 10
+        height: 10
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeFDiagCursor
     }
 
     // 启动加载动画遮罩

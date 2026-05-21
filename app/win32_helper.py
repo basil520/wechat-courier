@@ -111,42 +111,84 @@ def set_window_backdrop_win11(hwnd_val: int, backdrop_type: int) -> bool:
         return False
 
 
-def set_window_backdrop_win10(hwnd_val: int, is_dark: bool) -> bool:
-    """Apply native Acrylic frosted glass effect on Windows 10 using undocumented user32 APIs."""
+def _opacity_to_alpha(opacity_percent: int) -> int:
+    try:
+        opacity = int(opacity_percent)
+    except (TypeError, ValueError):
+        opacity = 72
+    opacity = max(45, min(90, opacity))
+    return int(round(255 * opacity / 100))
+
+
+def _argb(alpha: int, red: int, green: int, blue: int) -> int:
+    """Return Windows AccentPolicy color formatted as AABBGGRR."""
+    return ((alpha & 0xff) << 24) | ((blue & 0xff) << 16) | ((green & 0xff) << 8) | (red & 0xff)
+
+
+def _set_accent_policy(hwnd_val: int, accent_state: int, gradient_color: int = 0) -> bool:
     if not user32 or hwnd_val is None or hwnd_val == 0:
         return False
+    accent = ACCENT_POLICY()
+    accent.AccentState = accent_state
+    accent.AccentFlags = 2 if accent_state == ACCENT_ENABLE_ACRYLICBLURBEHIND else 0
+    accent.GradientColor = gradient_color
+    accent.AnimationId = 0
+
+    data = WINDOWCOMPOSITIONATTRIBDATA()
+    data.Attribute = WCA_ACCENT_POLICY
+    data.Data = ctypes.addressof(accent)
+    data.SizeOfData = ctypes.sizeof(accent)
+
+    hr = user32.SetWindowCompositionAttribute(hwnd_val, ctypes.byref(data))
+    return hr != 0
+
+
+def disable_window_backdrop(hwnd_val: int) -> bool:
+    """Disable native backdrop effects while keeping the window usable."""
+    if sys.platform != "win32" or hwnd_val is None or hwnd_val == 0:
+        return False
+
+    win11_ok = False
     try:
-        accent = ACCENT_POLICY()
-        accent.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND
-        accent.AccentFlags = 2  # Draw background gradient color and blur
-        
+        win_version = sys.getwindowsversion()
+        if win_version.major == 10 and win_version.build >= 22000:
+            win11_ok = set_window_backdrop_win11(hwnd_val, DWMSBT_DISABLE)
+    except Exception as e:
+        print(f"[win32_helper] disable Win11 backdrop failed: {e}")
+
+    win10_ok = False
+    try:
+        win10_ok = _set_accent_policy(hwnd_val, ACCENT_DISABLED)
+    except Exception as e:
+        print(f"[win32_helper] disable Win10 accent failed: {e}")
+
+    return win11_ok or win10_ok
+
+
+def set_window_backdrop_win10(hwnd_val: int, is_dark: bool, opacity_percent: int = 72) -> bool:
+    """Apply native Acrylic frosted glass effect on Windows 10 using undocumented user32 APIs."""
+    try:
+        alpha = _opacity_to_alpha(opacity_percent)
+
         # Color formatted as AABBGGRR in hex
-        # Windows 10 Acrylic needs an alpha tint for readability
+        # Windows 10 Acrylic needs an alpha tint for readability.
         if is_dark:
-            # 80% opacity dark grey/slate (0xcc1c1916)
-            accent.GradientColor = 0xcc1c1916
+            gradient_color = _argb(alpha, 0x16, 0x19, 0x1c)
         else:
-            # 85% opacity pure white (0xd9ffffff)
-            accent.GradientColor = 0xd9ffffff
-            
-        policy_size = ctypes.sizeof(accent)
-        
-        data = WINDOWCOMPOSITIONATTRIBDATA()
-        data.Attribute = WCA_ACCENT_POLICY
-        data.Data = ctypes.addressof(accent)
-        data.SizeOfData = policy_size
-        
-        hr = user32.SetWindowCompositionAttribute(hwnd_val, ctypes.byref(data))
-        return hr != 0
+            gradient_color = _argb(alpha, 0xff, 0xff, 0xff)
+
+        return _set_accent_policy(hwnd_val, ACCENT_ENABLE_ACRYLICBLURBEHIND, gradient_color)
     except Exception as e:
         print(f"[win32_helper] SetWindowCompositionAttribute Win10 Acrylic failed: {e}")
         return False
 
 
-def apply_acrylic_effect(hwnd_val: int, is_dark: bool) -> bool:
-    """Intelligently apply native Acrylic frosted glass backdrop based on Windows build version."""
+def apply_window_backdrop(hwnd_val: int, is_dark: bool, enabled: bool = True, opacity_percent: int = 72) -> bool:
+    """Apply or disable the native window backdrop based on user visual settings."""
     if sys.platform != "win32" or hwnd_val is None or hwnd_val == 0:
         return False
+    if not enabled:
+        return disable_window_backdrop(hwnd_val)
     try:
         win_version = sys.getwindowsversion()
         # Windows 11 starts at build 22000
@@ -155,7 +197,12 @@ def apply_acrylic_effect(hwnd_val: int, is_dark: bool) -> bool:
             return set_window_backdrop_win11(hwnd_val, DWMSBT_ACRYLIC)
         else:
             # Windows 10 style
-            return set_window_backdrop_win10(hwnd_val, is_dark)
+            return set_window_backdrop_win10(hwnd_val, is_dark, opacity_percent)
     except Exception as e:
-        print(f"[win32_helper] apply_acrylic_effect failed: {e}")
+        print(f"[win32_helper] apply_window_backdrop failed: {e}")
         return False
+
+
+def apply_acrylic_effect(hwnd_val: int, is_dark: bool) -> bool:
+    """Backward-compatible wrapper for existing callers."""
+    return apply_window_backdrop(hwnd_val, is_dark, True, 72)

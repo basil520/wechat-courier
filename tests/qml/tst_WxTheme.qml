@@ -5,6 +5,12 @@ import "../../qml/theme"
 TestCase {
     name: "WxTheme"
 
+    function init() {
+        WxTheme.isDark = false
+        WxTheme.glassEnabled = true
+        WxTheme.glassOpacity = 72
+    }
+
     function test_primary_color() {
         compare(WxTheme.clPrimary, "#07c160")
     }
@@ -133,5 +139,52 @@ TestCase {
 
     function test_sp_xlarge() {
         compare(WxTheme.spXLarge, 20)
+    }
+
+    function test_glass_defaults() {
+        compare(WxTheme.glassEnabled, true)
+        compare(WxTheme.glassOpacity, 72)
+    }
+
+    function test_glass_surface_tokens_exist() {
+        verify(WxTheme.clWindowTint !== undefined)
+        verify(WxTheme.clTitleBarBg !== undefined)
+        verify(WxTheme.clSurface !== undefined)
+        verify(WxTheme.clSurfaceStrong !== undefined)
+        verify(WxTheme.clInputBg !== undefined)
+        verify(WxTheme.clGlassDivider !== undefined)
+        verify(WxTheme.clPanelFill !== undefined)
+        verify(WxTheme.clFieldFill !== undefined)
+        verify(WxTheme.clToolbarFill !== undefined)
+        verify(WxTheme.clDropZoneFill !== undefined)
+        verify(WxTheme.clSurfaceBorder !== undefined)
+        verify(WxTheme.clSurfaceHighlight !== undefined)
+        verify(WxTheme.clFocusRing !== undefined)
+    }
+
+    function test_glass_material_tokens_keep_readability_floor() {
+        WxTheme.glassEnabled = true
+        WxTheme.glassOpacity = 45
+        WxTheme.isDark = true
+
+        verify(WxTheme.clFieldFill.a >= 0.86)
+        verify(WxTheme.clToolbarFill.a >= 0.78)
+        verify(WxTheme.clDropZoneFill.a >= 0.72)
+
+        WxTheme.isDark = false
+        verify(WxTheme.clFieldFill.a >= 0.86)
+        verify(WxTheme.clToolbarFill.a >= 0.78)
+        verify(WxTheme.clDropZoneFill.a >= 0.72)
+    }
+
+    function test_glass_material_tokens_fallback_when_disabled() {
+        WxTheme.glassEnabled = false
+        WxTheme.glassOpacity = 45
+        WxTheme.isDark = false
+
+        compare(WxTheme.clPanelFill, WxTheme.clBgPrimary)
+        compare(WxTheme.clFieldFill, WxTheme.clBgInput)
+        compare(WxTheme.clToolbarFill, WxTheme.clBgPrimary)
+        compare(WxTheme.clDropZoneFill, WxTheme.clBgInput)
     }
 }

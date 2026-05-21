@@ -2,6 +2,7 @@
 """BackendController 单元测试"""
 
 import pytest
+from PySide6.QtCore import QSettings
 
 from app.backend import BackendController
 from app.constants import PHASE_IDLE, PHASE_RUNNING, PHASE_PAUSED, PHASE_DONE
@@ -393,3 +394,66 @@ class TestBackendPhase3:
         monkeypatch.setattr(QGuiApplication, "clipboard", lambda: MockClipboard())
         backend.copy_to_clipboard("test clip content")
         assert copied_text == ["test clip content"]
+
+
+class TestBackendWindowVisualSettings:
+    def _settings(self, tmp_path):
+        return QSettings(str(tmp_path / "visual.ini"), QSettings.IniFormat)
+
+    def test_glass_defaults_when_settings_are_empty(self, qapp, tmp_path):
+        backend = BackendController(version="0.0.0-test", settings=self._settings(tmp_path))
+
+        assert backend.glassEnabled is True
+        assert backend.glassOpacity == 72
+
+    def test_glass_enabled_is_persisted_and_emits_signal(self, qapp, tmp_path, qtbot):
+        settings = self._settings(tmp_path)
+        backend = BackendController(version="0.0.0-test", settings=settings)
+
+        with qtbot.waitSignal(backend.glassEnabledChanged, timeout=1000) as blocker:
+            backend.glassEnabled = False
+
+        assert blocker.args == [False]
+        assert settings.value("visual/glassEnabled", True, type=bool) is False
+
+    def test_glass_opacity_is_clamped_persisted_and_emits_signal(self, qapp, tmp_path, qtbot):
+        settings = self._settings(tmp_path)
+        backend = BackendController(version="0.0.0-test", settings=settings)
+
+        with qtbot.waitSignal(backend.glassOpacityChanged, timeout=1000) as low_blocker:
+            backend.glassOpacity = 10
+        assert low_blocker.args == [45]
+        assert backend.glassOpacity == 45
+        assert settings.value("visual/glassOpacity", 0, type=int) == 45
+
+        with qtbot.waitSignal(backend.glassOpacityChanged, timeout=1000) as high_blocker:
+            backend.glassOpacity = 95
+        assert high_blocker.args == [90]
+        assert backend.glassOpacity == 90
+        assert settings.value("visual/glassOpacity", 0, type=int) == 90
+
+    def test_glass_settings_are_loaded_from_previous_session(self, qapp, tmp_path):
+        settings = self._settings(tmp_path)
+        settings.setValue("visual/glassEnabled", False)
+        settings.setValue("visual/glassOpacity", 83)
+        settings.sync()
+
+        backend = BackendController(version="0.0.0-test", settings=settings)
+
+        assert backend.glassEnabled is False
+        assert backend.glassOpacity == 83
+
+    def test_update_theme_mode_remains_backward_compatible(self, backend, monkeypatch):
+        calls = []
+
+        def fake_update(hwnd, is_dark, glass_enabled, glass_opacity):
+            calls.append((hwnd, is_dark, glass_enabled, glass_opacity))
+            return True
+
+        monkeypatch.setattr("app.backend.win32_helper.apply_window_backdrop", fake_update)
+
+        backend.glassEnabled = False
+        backend.glassOpacity = 66
+        backend.updateThemeMode(1234, True)
+
+        assert calls == [(1234, True, False, 66)]

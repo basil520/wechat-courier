@@ -12,7 +12,7 @@ Rectangle {
     height: WxTheme.chatFileCardHeight
     width: Math.min(parent.width, WxTheme.chatFileCardMaxWidth)
     radius: WxTheme.radiusMedium
-    color: WxTheme.clBgPrimary
+    color: WxTheme.clSurfaceStrong
     border.width: 1
     border.color: WxTheme.clBorder
 

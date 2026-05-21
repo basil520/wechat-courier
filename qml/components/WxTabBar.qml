@@ -20,7 +20,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         height: 1
-        color: WxTheme.clDivider
+        color: WxTheme.clGlassDivider
         z: -1
     }
 
@@ -112,53 +112,5 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
-
-        // Theme Toggle Button
-        Item {
-            Layout.preferredWidth: 40
-            Layout.fillHeight: true
-
-            Rectangle {
-                id: themeToggleBtn
-                anchors.centerIn: parent
-                width: 28
-                height: 28
-                radius: 14
-                color: WxTheme.isDark ? "#2c313a" : "#f0f2f5"
-                border.color: WxTheme.clBorder
-                border.width: 1
-
-                scale: hoverArea.containsMouse ? 1.1 : 1.0
-                Behavior on scale {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
-                }
-
-                WxIcon {
-                    id: themeIcon
-                    anchors.centerIn: parent
-                    iconSource: WxTheme.isDark ? "../icons/sun.svg" : "../icons/moon.svg"
-                    iconColor: WxTheme.isDark ? "#ffc300" : "#666666"
-                    hoverColor: WxTheme.isDark ? "#ffd600" : "#07c160"
-                    iconSize: 16
-                    hoverScale: false // Handled by parent scale
-
-                    Behavior on rotation {
-                        NumberAnimation { duration: 350; easing.type: Easing.OutQuint }
-                    }
-                }
-
-                MouseArea {
-                    id: hoverArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        themeIcon.rotation += 360
-                        WxTheme.isDark = !WxTheme.isDark
-                    }
-                }
-            }
-        }
     }
 }
-

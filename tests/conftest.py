@@ -5,10 +5,49 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, QObject, Signal
 
 from app.backend import BackendController
 from app.constants import PHASE_IDLE, PHASE_RUNNING, PHASE_PAUSED, PHASE_DONE
+
+
+class FakeSenderWorker(QObject):
+    progress_updated = Signal(int, int)
+    current_friend = Signal(str)
+    log_entry = Signal(str, str, str, str)
+    fatal_error = Signal(str)
+    finished = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.friends = []
+        self.message_template = ""
+        self.file_paths = []
+        self.use_forward = False
+        self.send_interval_min = 2.0
+        self.send_interval_max = 3.0
+        self.pause_called = False
+        self.resume_called = False
+        self.stop_called = False
+        self.start_called = False
+
+    def start(self):
+        self.start_called = True
+
+    def pause(self):
+        self.pause_called = True
+
+    def resume(self):
+        self.resume_called = True
+
+    def request_stop(self):
+        self.stop_called = True
+
+    def isRunning(self):
+        return False
+
+    def wait(self, timeout=0):
+        return True
 
 
 @pytest.fixture(scope="session")
@@ -23,7 +62,7 @@ def qapp():
 @pytest.fixture
 def backend(qapp):
     """创建独立的 BackendController 实例，测试结束后自动清理"""
-    ctrl = BackendController(version="0.0.0-test")
+    ctrl = BackendController(version="0.0.0-test", worker_factory=FakeSenderWorker)
     yield ctrl
     # 清理：停止可能还在运行的 worker，防止 Qt 对象销毁时崩溃
     if ctrl._worker is not None and ctrl._worker.isRunning():

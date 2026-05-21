@@ -3,6 +3,11 @@ import QtQuick
 
 QtObject {
     property bool isDark: false
+    property bool glassEnabled: true
+    property int glassOpacity: 72
+
+    readonly property real glassRatio: Math.max(45, Math.min(90, glassOpacity)) / 100.0
+    readonly property real glassAlpha: glassEnabled ? glassRatio : 1.0
 
     // ═══════════════════════════════
     //  颜色 — 微信风格
@@ -43,6 +48,73 @@ QtObject {
     readonly property color clDangerNewHover: isDark ? "#ff7373" : "#f13e3a"
     readonly property color clWarning: isDark ? "#ffd600" : "#ffc300"
     readonly property color clShadow: isDark ? "#000000" : "#000000"
+
+    // ═══════════════════════════════
+    //  Window glass shell tokens
+    // ═══════════════════════════════
+    readonly property color clWindowTint: glassEnabled
+        ? (isDark ? Qt.rgba(0.086, 0.098, 0.110, glassAlpha)
+                  : Qt.rgba(1.0, 1.0, 1.0, glassAlpha))
+        : clBgWindow
+    readonly property color clTitleBarBg: glassEnabled
+        ? (isDark ? Qt.rgba(0.095, 0.118, 0.137, Math.max(0.62, glassAlpha - 0.06))
+                  : Qt.rgba(1.0, 1.0, 1.0, Math.max(0.58, glassAlpha - 0.10)))
+        : clBgPrimary
+    readonly property color clSurface: glassEnabled
+        ? (isDark ? Qt.rgba(0.086, 0.098, 0.110, 0.40)
+                  : Qt.rgba(1.0, 1.0, 1.0, 0.34))
+        : clBgPrimary
+    readonly property color clSurfaceStrong: glassEnabled
+        ? (isDark ? Qt.rgba(0.086, 0.098, 0.110, 0.82)
+                  : Qt.rgba(1.0, 1.0, 1.0, 0.78))
+        : clBgPrimary
+    readonly property color clInputBg: glassEnabled
+        ? (isDark ? Qt.rgba(0.055, 0.071, 0.082, 0.88)
+                  : Qt.rgba(1.0, 1.0, 1.0, 0.86))
+        : clBgInput
+    readonly property color clGlassDivider: glassEnabled
+        ? (isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.08)
+                  : Qt.rgba(0.0, 0.0, 0.0, 0.09))
+        : clDivider
+    readonly property real panelMaterialAlpha: glassEnabled
+        ? Math.max(isDark ? 0.76 : 0.72, Math.min(0.90, glassRatio + 0.08))
+        : 1.0
+    readonly property real fieldMaterialAlpha: glassEnabled
+        ? Math.max(isDark ? 0.88 : 0.87, Math.min(0.96, glassRatio + 0.18))
+        : 1.0
+    readonly property real toolbarMaterialAlpha: glassEnabled
+        ? Math.max(isDark ? 0.80 : 0.79, Math.min(0.94, glassRatio + 0.12))
+        : 1.0
+    readonly property real dropZoneMaterialAlpha: glassEnabled
+        ? Math.max(isDark ? 0.74 : 0.73, Math.min(0.90, glassRatio + 0.10))
+        : 1.0
+    readonly property color clPanelFill: glassEnabled
+        ? (isDark ? Qt.rgba(0.074, 0.086, 0.098, panelMaterialAlpha)
+                  : Qt.rgba(1.0, 1.0, 1.0, panelMaterialAlpha))
+        : clBgPrimary
+    readonly property color clFieldFill: glassEnabled
+        ? (isDark ? Qt.rgba(0.050, 0.063, 0.074, fieldMaterialAlpha)
+                  : Qt.rgba(1.0, 1.0, 1.0, fieldMaterialAlpha))
+        : clBgInput
+    readonly property color clToolbarFill: glassEnabled
+        ? (isDark ? Qt.rgba(0.070, 0.082, 0.094, toolbarMaterialAlpha)
+                  : Qt.rgba(1.0, 1.0, 1.0, toolbarMaterialAlpha))
+        : clBgPrimary
+    readonly property color clDropZoneFill: glassEnabled
+        ? (isDark ? Qt.rgba(0.062, 0.074, 0.086, dropZoneMaterialAlpha)
+                  : Qt.rgba(1.0, 1.0, 1.0, dropZoneMaterialAlpha))
+        : clBgInput
+    readonly property color clSurfaceBorder: glassEnabled
+        ? (isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.11)
+                  : Qt.rgba(0.0, 0.0, 0.0, 0.10))
+        : clBorder
+    readonly property color clSurfaceHighlight: glassEnabled
+        ? (isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.07)
+                  : Qt.rgba(1.0, 1.0, 1.0, 0.55))
+        : Qt.rgba(1.0, 1.0, 1.0, 0.0)
+    readonly property color clFocusRing: isDark
+        ? Qt.rgba(0.0, 0.824, 0.380, 0.12)
+        : Qt.rgba(0.027, 0.757, 0.376, 0.14)
 
     // ═══════════════════════════════
     //  字体

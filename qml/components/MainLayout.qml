@@ -29,7 +29,7 @@ Rectangle {
             Rectangle {
                 Layout.preferredWidth: 1
                 Layout.fillHeight: true
-                color: WxTheme.clDivider
+                color: WxTheme.clGlassDivider
             }
 
             RightPanel {

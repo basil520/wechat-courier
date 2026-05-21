@@ -151,38 +151,16 @@ Rectangle {
                         wrapMode: TextArea.Wrap
                         padding: 10
 
-                        // Focus glow ring background
-                        background: Rectangle {
+                        background: WxGlassSurface {
                             id: friendsBg
                             radius: WxTheme.radiusMedium
-                            border.width: friendsInput.activeFocus ? 1.5 : 1
-                            border.color: friendListError.text !== "" ? WxTheme.clDangerNew
-                                : (friendsInput.activeFocus ? WxTheme.clPrimary : WxTheme.clBorder)
-                            color: WxTheme.clBgPrimary
-
-                            // Soft radial glow ring
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: -3
-                                radius: friendsBg.radius + 3
-                                color: "transparent"
-                                border.color: friendListError.text !== "" ? WxTheme.clDangerNew : WxTheme.clPrimary
-                                border.width: 3
-                                
-                                property real pulseOpacity: 0.25
-                                opacity: friendsInput.activeFocus ? pulseOpacity : 0.0
-                                
-                                Behavior on opacity {
-                                    NumberAnimation { duration: 150 }
-                                }
-                                
-                                SequentialAnimation on pulseOpacity {
-                                    running: friendsInput.activeFocus
-                                    loops: Animation.Infinite
-                                    NumberAnimation { from: 0.15; to: 0.35; duration: 1500; easing.type: Easing.InOutSine }
-                                    NumberAnimation { from: 0.35; to: 0.15; duration: 1500; easing.type: Easing.InOutSine }
-                                }
-                            }
+                            fillColor: WxTheme.clFieldFill
+                            borderColor: friendListError.text !== "" ? WxTheme.clDangerNew
+                                : (friendsInput.activeFocus ? WxTheme.clPrimary : WxTheme.clSurfaceBorder)
+                            focusColor: friendListError.text !== ""
+                                ? Qt.rgba(1.0, 0.322, 0.318, 0.14)
+                                : WxTheme.clFocusRing
+                            focused: friendsInput.activeFocus
                         }
 
                         // Connect right-click custom context menu
@@ -253,38 +231,16 @@ Rectangle {
                         wrapMode: TextArea.Wrap
                         padding: 10
 
-                        // Focus glow ring background
-                        background: Rectangle {
+                        background: WxGlassSurface {
                             id: templateBg
                             radius: WxTheme.radiusMedium
-                            border.width: templateInput.activeFocus ? 1.5 : 1
-                            border.color: templateError.text !== "" ? WxTheme.clDangerNew
-                                : (templateInput.activeFocus ? WxTheme.clPrimary : WxTheme.clBorder)
-                            color: WxTheme.clBgPrimary
-
-                            // Soft radial glow ring
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: -3
-                                radius: templateBg.radius + 3
-                                color: "transparent"
-                                border.color: templateError.text !== "" ? WxTheme.clDangerNew : WxTheme.clPrimary
-                                border.width: 3
-                                
-                                property real pulseOpacity: 0.25
-                                opacity: templateInput.activeFocus ? pulseOpacity : 0.0
-                                
-                                Behavior on opacity {
-                                    NumberAnimation { duration: 150 }
-                                }
-                                
-                                SequentialAnimation on pulseOpacity {
-                                    running: templateInput.activeFocus
-                                    loops: Animation.Infinite
-                                    NumberAnimation { from: 0.15; to: 0.35; duration: 1500; easing.type: Easing.InOutSine }
-                                    NumberAnimation { from: 0.35; to: 0.15; duration: 1500; easing.type: Easing.InOutSine }
-                                }
-                            }
+                            fillColor: WxTheme.clFieldFill
+                            borderColor: templateError.text !== "" ? WxTheme.clDangerNew
+                                : (templateInput.activeFocus ? WxTheme.clPrimary : WxTheme.clSurfaceBorder)
+                            focusColor: templateError.text !== ""
+                                ? Qt.rgba(1.0, 0.322, 0.318, 0.14)
+                                : WxTheme.clFocusRing
+                            focused: templateInput.activeFocus
                         }
 
                         // Connect right-click custom context menu
@@ -408,19 +364,18 @@ Rectangle {
                 }
 
                 // Drag & Drop Area / Attachment Box
-                Rectangle {
+                WxGlassSurface {
                     id: dropAttachmentBox
                     Layout.fillWidth: true
                     Layout.preferredHeight: fileListView.count > 0 ? 36 : 72
                     radius: WxTheme.radiusMedium
-                    color: dropArea.containsDrag ? WxTheme.clBgSelected : (WxTheme.isDark ? "#1f2328" : "#fafafa")
-                    border.width: dropArea.containsDrag ? 1.5 : 1
-                    border.color: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clBorder
+                    fillColor: dropArea.containsDrag ? WxTheme.clBgSelected : WxTheme.clDropZoneFill
+                    borderColor: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clSurfaceBorder
+                    focused: dropArea.containsDrag
+                    focusColor: WxTheme.clFocusRing
                     visible: panelBackend ? panelBackend.inputsEnabled : false
                     
                     Behavior on Layout.preferredHeight { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                     DropArea {
                         id: dropArea
@@ -517,7 +472,7 @@ Rectangle {
         MenuSeparator {
             background: Rectangle {
                 implicitHeight: 1
-                color: WxTheme.clDivider
+                color: WxTheme.clGlassDivider
             }
         }
         WxContextMenuItem {
@@ -562,7 +517,7 @@ Rectangle {
         MenuSeparator {
             background: Rectangle {
                 implicitHeight: 1
-                color: WxTheme.clDivider
+                color: WxTheme.clGlassDivider
             }
         }
         WxContextMenuItem {
@@ -599,7 +554,7 @@ Rectangle {
     // 发送中灰化遮罩
     Rectangle {
         anchors.fill: parent
-        color: WxTheme.clBgPrimary
+        color: WxTheme.clSurface
         opacity: panelBackend && !panelBackend.inputsEnabled ? 0.03 : 0.0
         visible: opacity > 0
         z: 10

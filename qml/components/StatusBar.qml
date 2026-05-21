@@ -8,7 +8,7 @@ Rectangle {
     property var compBackend: null
 
     height: WxTheme.statusBarHeight
-    color: WxTheme.clBgSecondary
+    color: WxTheme.clToolbarFill
 
     RowLayout {
         anchors.fill: parent

@@ -11,7 +11,7 @@ Rectangle {
 
     height: 56
     radius: 8
-    color: WxTheme.clBgPrimary
+    color: WxTheme.clSurfaceStrong
     border.width: 1
     border.color: hovered ? WxTheme.clPrimary : WxTheme.clBorder
 

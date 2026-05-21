@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal, Slot, Property, QStringListModel, QAbstractListModel
+from PySide6.QtCore import QObject, Signal, Slot, Property, QStringListModel, QSettings
 
 from .constants import PHASE_IDLE, PHASE_RUNNING, PHASE_PAUSED, PHASE_DONE
 from .demo import is_demo_mode
@@ -46,10 +46,18 @@ class BackendController(QObject):
     fileSizesChanged = Signal(list)
     sendIntervalMinChanged = Signal(float)
     sendIntervalMaxChanged = Signal(float)
+    glassEnabledChanged = Signal(bool)
+    glassOpacityChanged = Signal(int)
     showToast = Signal(str, str)
     previewIndexChanged = Signal(int)
 
-    def __init__(self, version: str = "0.2.1", parent=None):
+    def __init__(
+        self,
+        version: str = "0.2.1",
+        parent=None,
+        settings: QSettings | None = None,
+        worker_factory=None,
+    ):
         super().__init__(parent)
 
         # ── 内部状态 ──
@@ -75,9 +83,15 @@ class BackendController(QObject):
         self._demo_mode = is_demo_mode()
         self._send_interval_min = 2.0
         self._send_interval_max = 3.0
+        self._settings = settings or QSettings("wx4py", "WeChatCourier")
+        self._glass_enabled = self._settings.value("visual/glassEnabled", True, type=bool)
+        self._glass_opacity = self._clamp_glass_opacity(
+            self._settings.value("visual/glassOpacity", 72, type=int)
+        )
 
         # ── 发送状态 ──
         self._worker: SenderWorker | None = None
+        self._worker_factory = worker_factory or SenderWorker
         self._prev_phase_for_pause = PHASE_IDLE
 
         # 初始化只读属性
@@ -264,6 +278,34 @@ class BackendController(QObject):
 
     sendIntervalMax = Property(float, _get_send_interval_max, _set_send_interval_max, notify=sendIntervalMaxChanged)
 
+    # ── glassEnabled ──
+    def _get_glass_enabled(self) -> bool:
+        return self._glass_enabled
+
+    def _set_glass_enabled(self, value: bool):
+        normalized = bool(value)
+        if self._glass_enabled != normalized:
+            self._glass_enabled = normalized
+            self._settings.setValue("visual/glassEnabled", normalized)
+            self._settings.sync()
+            self.glassEnabledChanged.emit(normalized)
+
+    glassEnabled = Property(bool, _get_glass_enabled, _set_glass_enabled, notify=glassEnabledChanged)
+
+    # ── glassOpacity ──
+    def _get_glass_opacity(self) -> int:
+        return self._glass_opacity
+
+    def _set_glass_opacity(self, value: int):
+        normalized = self._clamp_glass_opacity(value)
+        if self._glass_opacity != normalized:
+            self._glass_opacity = normalized
+            self._settings.setValue("visual/glassOpacity", normalized)
+            self._settings.sync()
+            self.glassOpacityChanged.emit(normalized)
+
+    glassOpacity = Property(int, _get_glass_opacity, _set_glass_opacity, notify=glassOpacityChanged)
+
     # ═══════════════════════════════════════
     #  工具方法
     # ═══════════════════════════════════════
@@ -278,6 +320,14 @@ class BackendController(QObject):
             return f"{size_bytes / (1024 * 1024):.1f} MB"
         else:
             return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
+
+    @staticmethod
+    def _clamp_glass_opacity(value: int) -> int:
+        try:
+            numeric = int(value)
+        except (TypeError, ValueError):
+            numeric = 72
+        return max(45, min(90, numeric))
 
     # ═══════════════════════════════════════
     #  预览
@@ -358,7 +408,7 @@ class BackendController(QObject):
         self.fatalErrorChanged.emit("")
 
         # 创建并配置工作线程
-        self._worker = SenderWorker()
+        self._worker = self._worker_factory()
         self._worker.friends = friends_list
         self._worker.message_template = template
         self._worker.file_paths = list(self._file_paths)
@@ -591,10 +641,18 @@ class BackendController(QObject):
 
     @Slot(int, bool)
     def updateThemeMode(self, hwnd: int, is_dark: bool):
-        """同步 QML 主题到原生 Windows DWM，设置沉浸式顶栏并启用 Acrylic 亚克力背景"""
-        if sys.platform != "win32":
-            return
-        # 1. 强制应用沉浸式暗色模式边框/标题栏 (兼容 Win10/Win11)
+        """兼容旧 QML 调用：按当前持久化玻璃设置刷新窗口视觉。"""
+        self.updateWindowVisuals(hwnd, is_dark, self._glass_enabled, self._glass_opacity)
+
+    @Slot(int, bool, bool, int)
+    def updateWindowVisuals(self, hwnd: int, is_dark: bool, glass_enabled: bool, glass_opacity: int):
+        """同步 QML 主题与窗口级毛玻璃设置到原生 Windows DWM。"""
+        self.glassEnabled = glass_enabled
+        self.glassOpacity = glass_opacity
         win32_helper.set_immersive_dark_mode(hwnd, is_dark)
-        # 2. 智能应用亚克力磨砂玻璃背景材质 (兼容 Win10/Win11)
-        win32_helper.apply_acrylic_effect(hwnd, is_dark)
+        win32_helper.apply_window_backdrop(
+            hwnd,
+            is_dark,
+            self._glass_enabled,
+            self._glass_opacity,
+        )

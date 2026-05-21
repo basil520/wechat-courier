@@ -15,7 +15,7 @@ Rectangle {
     property int failureCount: 0
     property int elapsedTime: 0
 
-    color: WxTheme.clBgPrimary
+    color: WxTheme.clSurface
 
     // 格式化时间辅助函数
     function formatTime(secs) {
@@ -124,7 +124,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 36
-            color: WxTheme.clBgPrimary
+            color: WxTheme.clSurfaceStrong
 
             RowLayout {
                 anchors.fill: parent
@@ -218,7 +218,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: WxTheme.clBgPrimary
+            color: WxTheme.clSurface
             clip: true
 
             EmptyState {
@@ -261,9 +261,9 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: panelBackend && panelBackend.phase === "done" ? 44 : 0
             visible: panelBackend && panelBackend.phase === "done"
-            color: WxTheme.clBgSecondary
+            color: WxTheme.clSurfaceStrong
             border.width: 1
-            border.color: WxTheme.clDivider
+            border.color: WxTheme.clGlassDivider
 
             Behavior on Layout.preferredHeight {
                 NumberAnimation { duration: WxTheme.animSlow; easing.type: Easing.OutCubic }
@@ -309,7 +309,7 @@ Rectangle {
 
                     background: Rectangle {
                         radius: WxTheme.radiusSmall
-                        color: exportBtn.pressed ? WxTheme.clDivider : (exportBtn.hovered ? WxTheme.clBgHover : "transparent")
+                        color: exportBtn.pressed ? WxTheme.clGlassDivider : (exportBtn.hovered ? WxTheme.clBgHover : "transparent")
                         border.width: 1
                         border.color: WxTheme.clBorder
                     }

@@ -8,25 +8,28 @@ Rectangle {
 
     property var panelBackend: null
 
-    color: WxTheme.clChatBg
+    color: WxTheme.clPanelFill
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
         // ── 1. 顶部微信风格标题栏 ──
-        Rectangle {
+        WxGlassSurface {
             id: mockHeader
             Layout.fillWidth: true
             Layout.preferredHeight: 48
-            color: WxTheme.clBgPrimary
+            radius: 0
+            fillColor: WxTheme.clToolbarFill
+            borderColor: "transparent"
+            highlightEnabled: true
 
             // Bottom Divider
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: WxTheme.clDivider
+                color: WxTheme.clSurfaceBorder
             }
 
             RowLayout {
@@ -180,18 +183,21 @@ Rectangle {
         }
 
         // ── 3. 模拟底部输入框 ──
-        Rectangle {
+        WxGlassSurface {
             id: mockInputArea
             Layout.fillWidth: true
             Layout.preferredHeight: 140
-            color: WxTheme.isDark ? "#1c2024" : "#f5f5f5"
+            radius: 0
+            fillColor: WxTheme.clToolbarFill
+            borderColor: "transparent"
+            highlightEnabled: true
 
             // Top Border line
             Rectangle {
                 anchors.top: parent.top
                 width: parent.width
                 height: 1
-                color: WxTheme.clDivider
+                color: WxTheme.clSurfaceBorder
             }
 
             ColumnLayout {
@@ -316,10 +322,9 @@ Rectangle {
         modal: false
         focus: true
 
-        background: Rectangle {
-            color: WxTheme.isDark ? "#1c2024" : "#ffffff"
-            border.color: WxTheme.clBorder
-            border.width: 1
+        background: WxGlassSurface {
+            fillColor: WxTheme.clPanelFill
+            borderColor: WxTheme.clSurfaceBorder
             radius: WxTheme.radiusMedium
         }
 
@@ -363,7 +368,7 @@ Rectangle {
                     radius: WxTheme.radiusSmall
                     color: modelData.index === (panelBackend ? panelBackend.previewIndex : 0)
                         ? WxTheme.clBgSelected
-                        : (mouseArea.containsMouse ? (WxTheme.isDark ? "#282d35" : "#f5f5f5") : "transparent")
+                        : (mouseArea.containsMouse ? WxTheme.clBgHover : "transparent")
 
                     RowLayout {
                         anchors.fill: parent

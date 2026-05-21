@@ -9,14 +9,14 @@ Rectangle {
     signal startSendRequested()
 
     height: WxTheme.actionBarHeight
-    color: WxTheme.clBgSecondary
+    color: WxTheme.clToolbarFill
 
     // 顶部分隔线
     Rectangle {
         anchors.top: parent.top
         width: parent.width
         height: 1
-        color: WxTheme.clDivider
+        color: WxTheme.clSurfaceBorder
     }
 
     RowLayout {
