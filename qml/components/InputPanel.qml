@@ -23,7 +23,7 @@ Rectangle {
     // Calculate count of attached files
     property int _fileCount: panelBackend ? panelBackend.filePaths.length : 0
 
-    color: WxTheme.clBgPrimary
+    color: "transparent"
 
     ColumnLayout {
         anchors.fill: parent

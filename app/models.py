@@ -31,7 +31,7 @@ def extract_greeting_name(remark: str) -> str:
             suffix = s
             student_name = name_part[: -len(s)]
             break
-    if len(student_name) == 3:
+    if len(student_name) == 3 and all('\u4e00' <= c <= '\u9fff' for c in student_name):
         return student_name[1:] + suffix
     return name_part
 

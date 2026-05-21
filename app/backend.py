@@ -11,6 +11,7 @@ from .constants import PHASE_IDLE, PHASE_RUNNING, PHASE_PAUSED, PHASE_DONE
 from .demo import is_demo_mode
 from .models import extract_greeting_name
 from .sender_worker import SenderWorker
+from . import win32_helper
 
 
 class BackendController(QObject):
@@ -587,3 +588,13 @@ class BackendController(QObject):
     def _set_inputs_enabled(self, enabled: bool):
         self._inputs_enabled = enabled
         self.inputsEnabledChanged.emit(enabled)
+
+    @Slot(int, bool)
+    def updateThemeMode(self, hwnd: int, is_dark: bool):
+        """同步 QML 主题到原生 Windows DWM，设置沉浸式顶栏并启用 Acrylic 亚克力背景"""
+        if sys.platform != "win32":
+            return
+        # 1. 强制应用沉浸式暗色模式边框/标题栏
+        win32_helper.set_immersive_dark_mode(hwnd, is_dark)
+        # 2. 设置原生 Windows 11 亚克力毛玻璃背景材质 (DWMSBT_ACRYLIC = 3)
+        win32_helper.set_window_backdrop(hwnd, win32_helper.DWMSBT_ACRYLIC)

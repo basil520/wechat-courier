@@ -7,7 +7,7 @@ Rectangle {
 
     property var panelBackend: null
 
-    color: WxTheme.clBgPrimary
+    color: "transparent"
 
     // 内部 Tab 索引
     property int currentTab: 0

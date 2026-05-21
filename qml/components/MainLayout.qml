@@ -7,7 +7,7 @@ Rectangle {
 
     property var mainBackend: null
 
-    color: WxTheme.clBgPrimary
+    color: "transparent"
 
     ColumnLayout {
         anchors.fill: parent

@@ -7,7 +7,7 @@ Rectangle {
     // backend 从 main.qml 传入
     property var appBackend: null
 
-    color: WxTheme.clBgPrimary
+    color: "transparent"
 
     ColumnLayout {
         anchors.fill: parent

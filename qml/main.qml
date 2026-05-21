@@ -13,17 +13,33 @@ ApplicationWindow {
     minimumHeight: 650
     visible: true
     title: "五阿哥群发助手"
+    color: "transparent"
 
     background: Rectangle {
-        color: WxTheme.clBgPrimary
+        color: WxTheme.isDark ? "#cc16191c" : "#e6ffffff"
+        Behavior on color {
+            ColorAnimation { duration: WxTheme.animSlow }
+        }
     }
 
-    // 窗口居中
+    // 监听主题变化，调用后端 Win32 API 动态刷新原生边框及背景材质
+    Connections {
+        target: WxTheme
+        ignoreUnknownSignals: true
+        function onIsDarkChanged() {
+            if (typeof backend !== "undefined" && backend) {
+                backend.updateThemeMode(root.winId(), WxTheme.isDark)
+            }
+        }
+    }
+
+    // 窗口居中并初始化 DWM 原生效果
     Component.onCompleted: {
         root.x = (Screen.width - root.width) / 2
         root.y = (Screen.height - root.height) / 2
         if (typeof backend !== "undefined" && backend) {
             root.title = backend.versionInfo
+            backend.updateThemeMode(root.winId(), WxTheme.isDark)
         }
     }
 
