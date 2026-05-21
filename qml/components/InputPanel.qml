@@ -60,6 +60,7 @@ Rectangle {
                 // ── 好友名单 ──
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: WxTheme.spSmall
                     Text {
                         text: "接收好友名单（每行一个）"
                         font.family: WxTheme.fontFamily
@@ -67,6 +68,56 @@ Rectangle {
                         font.bold: true
                         color: WxTheme.clTextSecondary
                         Layout.fillWidth: true
+                    }
+                    Text {
+                        text: "✨ 智能去重"
+                        font.family: WxTheme.fontFamily
+                        font.pixelSize: WxTheme.fontSizeTiny
+                        font.bold: true
+                        color: panelBackend && panelBackend.inputsEnabled ? WxTheme.clTextLink : WxTheme.clTextHint
+                        visible: friendsInput.text.trim() !== ""
+                        
+                        scale: cleanMouseArea.containsMouse ? 1.08 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 100 } }
+
+                        MouseArea {
+                            id: cleanMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: panelBackend ? panelBackend.inputsEnabled : false
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                var txt = friendsInput.text
+                                var lines = txt.split("\n")
+                                var uniqueLines = []
+                                var seen = {}
+                                var duplicatesCount = 0
+                                
+                                for (var i = 0; i < lines.length; i++) {
+                                    var cleaned = lines[i].trim()
+                                    if (cleaned !== "") {
+                                        if (!seen[cleaned]) {
+                                            seen[cleaned] = true
+                                            uniqueLines.push(cleaned)
+                                        } else {
+                                            duplicatesCount++
+                                        }
+                                    }
+                                }
+                                
+                                var cleanedText = uniqueLines.join("\n")
+                                friendsInput.text = cleanedText
+                                if (panelBackend) panelBackend.friendListText = cleanedText
+                                
+                                if (typeof globalToast !== "undefined" && globalToast) {
+                                    if (duplicatesCount > 0) {
+                                        globalToast.show("✨ 已成功去重！清理了 " + duplicatesCount + " 个重复好友", "success")
+                                    } else {
+                                        globalToast.show("✨ 名单格式已自动净化规范", "info")
+                                    }
+                                }
+                            }
+                        }
                     }
                     Text {
                         text: root._friendCount > 0 ? root._friendCount + " 位好友" : ""
@@ -356,15 +407,80 @@ Rectangle {
                     }
                 }
 
-                // 空文件提示
-                Text {
-                    visible: !fileListView.visible
-                    text: "尚未选择文件（支持多个文件批量发送）"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeSmall
-                    color: WxTheme.clTextHint
+                // Drag & Drop Area / Attachment Box
+                Rectangle {
+                    id: dropAttachmentBox
                     Layout.fillWidth: true
-                    Layout.leftMargin: WxTheme.spSmall
+                    Layout.preferredHeight: fileListView.count > 0 ? 36 : 72
+                    radius: WxTheme.radiusMedium
+                    color: dropArea.containsDrag ? WxTheme.clBgSelected : (WxTheme.isDark ? "#1f2328" : "#fafafa")
+                    border.width: dropArea.containsDrag ? 1.5 : 1
+                    border.color: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clBorder
+                    visible: panelBackend ? panelBackend.inputsEnabled : false
+                    
+                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    DropArea {
+                        id: dropArea
+                        anchors.fill: parent
+                        keys: ["text/uri-list"]
+                        
+                        onDropped: function(drop) {
+                            if (drop.hasUrls && panelBackend && panelBackend.inputsEnabled) {
+                                for (var i = 0; i < drop.urls.length; i++) {
+                                    var urlStr = drop.urls[i].toString()
+                                    panelBackend.add_file_path(urlStr)
+                                }
+                                if (typeof globalToast !== "undefined" && globalToast) {
+                                    globalToast.show("✨ 已成功添加拖拽文件！", "success")
+                                }
+                            }
+                        }
+                    }
+
+                    // Content layout when files are present (minimizes layout usage)
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        visible: fileListView.count > 0
+
+                        WxIcon {
+                            iconSource: "../icons/folder_open.svg"
+                            iconSize: 14
+                            iconColor: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextHint
+                            hoverScale: false
+                        }
+
+                        Text {
+                            text: dropArea.containsDrag ? "松开以添加文件..." : "可拖拽外部文件到此处继续添加..."
+                            font.family: WxTheme.fontFamily
+                            font.pixelSize: WxTheme.fontSizeTiny
+                            color: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextSecondary
+                        }
+                    }
+
+                    // Content layout when empty
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        visible: fileListView.count === 0
+
+                        WxIcon {
+                            iconSource: "../icons/folder_open.svg"
+                            iconSize: 20
+                            iconColor: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextHint
+                            hoverScale: false
+                        }
+
+                        Text {
+                            text: dropArea.containsDrag ? "松开即可添加文件 📂" : "支持拖拽外部文件至此区域快速添加"
+                            font.family: WxTheme.fontFamily
+                            font.pixelSize: WxTheme.fontSizeTiny
+                            color: dropArea.containsDrag ? WxTheme.clPrimary : WxTheme.clTextSecondary
+                        }
+                    }
                 }
             }
         }

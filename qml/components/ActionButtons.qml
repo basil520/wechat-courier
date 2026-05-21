@@ -36,6 +36,12 @@ Item {
         implicitHeight: 32
         implicitWidth: root._btnWidth
 
+        // Bouncy spring scale for visual premium click feel
+        scale: btn.pressed ? 0.95 : (btn.hovered ? 1.05 : 1.0)
+        Behavior on scale {
+            NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+        }
+
         contentItem: Text {
             text: btn.text
             font: btn.font

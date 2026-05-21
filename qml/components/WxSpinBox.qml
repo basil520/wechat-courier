@@ -19,6 +19,19 @@ Rectangle {
     border.width: activeFocus ? 1 : 0
     border.color: WxTheme.clBorderFocus
 
+    // Premium hover feedback on the entire control
+    scale: hoverArea.containsMouse ? 1.03 : 1.0
+    Behavior on scale {
+        NumberAnimation { duration: WxTheme.animNormal; easing.type: Easing.OutQuad }
+    }
+
+    MouseArea {
+        id: hoverArea
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton // Allows hover detection but lets actual clicks fall through
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -29,6 +42,11 @@ Rectangle {
             Layout.fillHeight: true
             color: minusArea.containsMouse ? WxTheme.clBgHover : "transparent"
             radius: WxTheme.radiusSmall
+
+            scale: minusArea.pressed ? 0.95 : (minusArea.containsMouse ? 1.05 : 1.0)
+            Behavior on scale {
+                NumberAnimation { duration: 80 }
+            }
 
             Behavior on color {
                 ColorAnimation { duration: WxTheme.animFast }
@@ -90,6 +108,11 @@ Rectangle {
             color: plusArea.containsMouse ? WxTheme.clBgHover : "transparent"
             radius: WxTheme.radiusSmall
 
+            scale: plusArea.pressed ? 0.95 : (plusArea.containsMouse ? 1.05 : 1.0)
+            Behavior on scale {
+                NumberAnimation { duration: 80 }
+            }
+
             Behavior on color {
                 ColorAnimation { duration: WxTheme.animFast }
             }
@@ -114,3 +137,4 @@ Rectangle {
         }
     }
 }
+

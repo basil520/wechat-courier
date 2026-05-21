@@ -2,45 +2,47 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    property bool isDark: false
+
     // ═══════════════════════════════
     //  颜色 — 微信风格
     // ═══════════════════════════════
-    readonly property color clPrimary: "#07c160"
-    readonly property color clPrimaryHover: "#06ad56"
-    readonly property color clPrimaryPress: "#059a4c"
-    readonly property color clBubbleBg: "#95ec69"
-    readonly property color clFileCardBg: "#f5f5f5"
-    readonly property color clLogOk: "#2e7d32"
-    readonly property color clLogErr: "#c62828"
-    readonly property color clTextPrimary: "#191919"
-    readonly property color clTextSecondary: "#666666"
-    readonly property color clTextHint: "#999999"
-    readonly property color clBgPrimary: "#ffffff"
-    readonly property color clBgSecondary: "#f7f7f7"
-    readonly property color clBorder: "#e5e5e5"
-    readonly property color clDivider: "#ededed"
-    readonly property color clWarningBg: "#fff3e0"
-    readonly property color clTooltipBg: "#ffffe0"
-    readonly property color clDanger: "#d9534f"
-    readonly property color clDangerHover: "#c9302c"
+    readonly property color clPrimary: isDark ? "#00d261" : "#07c160"
+    readonly property color clPrimaryHover: isDark ? "#00b553" : "#06ad56"
+    readonly property color clPrimaryPress: isDark ? "#009845" : "#059a4c"
+    readonly property color clBubbleBg: isDark ? "#2b6a38" : "#95ec69"
+    readonly property color clFileCardBg: isDark ? "#24292e" : "#f5f5f5"
+    readonly property color clLogOk: isDark ? "#388e3c" : "#2e7d32"
+    readonly property color clLogErr: isDark ? "#e53935" : "#c62828"
+    readonly property color clTextPrimary: isDark ? "#f0f3f6" : "#191919"
+    readonly property color clTextSecondary: isDark ? "#9faab5" : "#666666"
+    readonly property color clTextHint: isDark ? "#62707d" : "#999999"
+    readonly property color clBgPrimary: isDark ? "#16191c" : "#ffffff"
+    readonly property color clBgSecondary: isDark ? "#1f2328" : "#f7f7f7"
+    readonly property color clBorder: isDark ? "#2d333b" : "#e5e5e5"
+    readonly property color clDivider: isDark ? "#252a30" : "#ededed"
+    readonly property color clWarningBg: isDark ? "#332211" : "#fff3e0"
+    readonly property color clTooltipBg: isDark ? "#333311" : "#ffffe0"
+    readonly property color clDanger: isDark ? "#d9534f" : "#d9534f"
+    readonly property color clDangerHover: isDark ? "#c9302c" : "#c9302c"
 
     // ═══════════════════════════════
     //  Phase 2 新增 — 扩展色彩
     // ═══════════════════════════════
-    readonly property color clPrimaryDisabled: "#a0e6b9"
-    readonly property color clBgWindow: "#f5f5f5"
-    readonly property color clBgHover: "#f7f7f7"
-    readonly property color clBgSelected: "#e6f7ed"
-    readonly property color clBgInput: "#f5f5f5"
-    readonly property color clBorderFocus: "#07c160"
-    readonly property color clBubbleTail: "#95ec69"
-    readonly property color clTextLink: "#576b95"
-    readonly property color clToastBg: "#4c4c4c"
+    readonly property color clPrimaryDisabled: isDark ? "#205035" : "#a0e6b9"
+    readonly property color clBgWindow: isDark ? "#0d0f12" : "#f5f5f5"
+    readonly property color clBgHover: isDark ? "#24292e" : "#f7f7f7"
+    readonly property color clBgSelected: isDark ? "#1a3528" : "#e6f7ed"
+    readonly property color clBgInput: isDark ? "#202428" : "#f5f5f5"
+    readonly property color clBorderFocus: isDark ? "#00d261" : "#07c160"
+    readonly property color clBubbleTail: isDark ? "#2b6a38" : "#95ec69"
+    readonly property color clTextLink: isDark ? "#6e85b7" : "#576b95"
+    readonly property color clToastBg: isDark ? "#2c2d30" : "#4c4c4c"
     readonly property color clToastText: "#ffffff"
-    readonly property color clDangerNew: "#fa5151"
-    readonly property color clDangerNewHover: "#f13e3a"
-    readonly property color clWarning: "#ffc300"
-    readonly property color clShadow: "#000000"
+    readonly property color clDangerNew: isDark ? "#ff5252" : "#fa5151"
+    readonly property color clDangerNewHover: isDark ? "#ff7373" : "#f13e3a"
+    readonly property color clWarning: isDark ? "#ffd600" : "#ffc300"
+    readonly property color clShadow: isDark ? "#000000" : "#000000"
 
     // ═══════════════════════════════
     //  字体
@@ -89,12 +91,12 @@ QtObject {
     // ═══════════════════════════════
     //  Phase 1 (V4) 新增 — 扩展主题常量
     // ═══════════════════════════════
-    readonly property color clChatBg: "#ebebeb"
-    readonly property color clTabActive: "#07c160"
-    readonly property color clTabInactive: "#999999"
-    readonly property color clProgressTrack: "#e9e9e9"
-    readonly property color clSwitchTrackOff: "#dcdfe6"
-    readonly property color clSwitchThumb: "#ffffff"
+    readonly property color clChatBg: isDark ? "#0d0f12" : "#ebebeb"
+    readonly property color clTabActive: isDark ? "#00d261" : "#07c160"
+    readonly property color clTabInactive: isDark ? "#7a8b9a" : "#999999"
+    readonly property color clProgressTrack: isDark ? "#262b32" : "#e9e9e9"
+    readonly property color clSwitchTrackOff: isDark ? "#353c45" : "#dcdfe6"
+    readonly property color clSwitchThumb: isDark ? "#f0f3f6" : "#ffffff"
 
     readonly property int fontSizeXSmall: 10
     readonly property int fontSizeTitle: 15
