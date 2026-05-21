@@ -2,7 +2,7 @@ import QtQuick
 import Qt5Compat.GraphicalEffects
 
 DropShadow {
-    anchors.fill: parent.shadowTarget
+    anchors.fill: parent
     source: parent.shadowTarget
     transparentBorder: true
     horizontalOffset: 0

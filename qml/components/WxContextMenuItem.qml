@@ -21,13 +21,20 @@ MenuItem {
         anchors.leftMargin: WxTheme.spMedium
         anchors.rightMargin: WxTheme.spMedium
 
-        WxIcon {
-            id: prefixIcon
-            iconSource: root.iconSource
-            iconSize: 14
-            iconColor: root.hovered ? root.hoverIconColor : root.iconColor
-            visible: root.iconSource !== ""
-            hoverScale: false
+        // 图标占位区：无论有无图标都固定留出 22px 宽度，保证文字对齐
+        Item {
+            Layout.preferredWidth: 22
+            Layout.fillHeight: true
+
+            WxIcon {
+                id: prefixIcon
+                anchors.centerIn: parent
+                iconSource: root.iconSource
+                iconSize: 14
+                iconColor: root.hovered ? root.hoverIconColor : root.iconColor
+                visible: root.iconSource !== ""
+                hoverScale: false
+            }
         }
 
         Text {

@@ -85,4 +85,27 @@ QtObject {
     readonly property int shadowBlurLight: 8
     readonly property int shadowBlurMedium: 12
     readonly property int shadowBlurHeavy: 16
+
+    // ═══════════════════════════════
+    //  Phase 1 (V4) 新增 — 扩展主题常量
+    // ═══════════════════════════════
+    readonly property color clChatBg: "#ebebeb"
+    readonly property color clTabActive: "#07c160"
+    readonly property color clTabInactive: "#999999"
+    readonly property color clProgressTrack: "#e9e9e9"
+    readonly property color clSwitchTrackOff: "#dcdfe6"
+    readonly property color clSwitchThumb: "#ffffff"
+
+    readonly property int fontSizeXSmall: 10
+    readonly property int fontSizeTitle: 15
+
+    readonly property int controlHeight: 28
+    readonly property int tabHeight: 36
+    readonly property int statusBarHeight: 24
+    readonly property int actionBarHeight: 40
+    readonly property int chatBubbleMaxWidth: 260
+    readonly property int chatFileCardMaxWidth: 220
+    readonly property int chatFileCardHeight: 44
+
+    readonly property int spXLarge: 20
 }

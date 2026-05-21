@@ -92,7 +92,7 @@ Rectangle {
                             }
                         }
                         enabled: panelBackend ? panelBackend.inputsEnabled : false
-                        placeholderText: "25届初二-郑子轩妈妈\n张永琪爸爸\n王小明"
+                        placeholderText: "张三\n李四\n王五"
                         placeholderTextColor: WxTheme.clTextHint
                         font.family: WxTheme.fontFamily
                         font.pixelSize: WxTheme.fontSizeNormal
@@ -348,6 +348,7 @@ Rectangle {
                             fileIndex: index
                             filePath: (typeof model.display === "string") ? model.display : ""
                             itemBackend: panelBackend
+                            removable: panelBackend ? panelBackend.inputsEnabled : true
                             onRemoveRequested: function(idx) {
                                 if (panelBackend) panelBackend.remove_file_at(idx)
                             }
@@ -367,162 +368,6 @@ Rectangle {
                 }
             }
         }
-
-        // ═══════════════════════════════
-        //  3. 粘性底栏 (Sticky Bottom Panel)
-        // ═══════════════════════════════
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: WxTheme.clDivider
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: WxTheme.spSmall
-
-            // ── 转发模式 ──
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: WxTheme.spTiny
-
-                CheckBox {
-                    id: forwardCheck
-                    checked: panelBackend ? panelBackend.useForward : false
-                    onCheckedChanged: { if (panelBackend) panelBackend.useForward = checked }
-                    enabled: panelBackend ? panelBackend.inputsEnabled : false
-
-                    indicator: Rectangle {
-                        implicitWidth: 16
-                        implicitHeight: 16
-                        radius: WxTheme.radiusSmall
-                        border.width: 1
-                        border.color: forwardCheck.checked ? WxTheme.clPrimary : WxTheme.clBorder
-                        color: forwardCheck.checked ? WxTheme.clPrimary : WxTheme.clBgPrimary
-
-                        Text {
-                            visible: forwardCheck.checked
-                            anchors.centerIn: parent
-                            text: "✓"
-                            color: "#ffffff"
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                    }
-
-                    contentItem: Text {
-                        text: "通过『文件传输助手』转发（先上传1次，后续好友走合并转发）"
-                        font.family: WxTheme.fontFamily
-                        font.pixelSize: WxTheme.fontSizeTiny
-                        color: WxTheme.clTextSecondary
-                        leftPadding: forwardCheck.indicator.width + 4
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-
-                Text {
-                    text: "  ?"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeSmall
-                    color: WxTheme.clTextHint
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: tooltip.visible = true
-                        onExited: tooltip.visible = false
-                    }
-
-                    ToolTip {
-                        id: tooltip
-                        visible: false
-                        delay: 300
-                        text: "勾选后：文件先发到文件传输助手，每个好友通过「多选-合并转发」分发，\n对每位好友只需 1 次对话框操作，文案作为留言一起送达。\n未勾选则每个好友都重新打开聊天+重新上传文件。"
-                    }
-                }
-            }
-
-            // ── 发送间隔配置 ──
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: WxTheme.spSmall
-
-                Text {
-                    text: "发送间隔（秒）:"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeSmall
-                    color: WxTheme.clTextSecondary
-                }
-
-                SpinBox {
-                    id: minIntervalSpin
-                    from: 0
-                    to: maxIntervalSpin.value
-                    value: panelBackend ? Math.round(panelBackend.sendIntervalMin) : 2
-                    onValueChanged: {
-                        if (panelBackend) panelBackend.sendIntervalMin = value
-                    }
-                    enabled: panelBackend ? panelBackend.inputsEnabled : false
-                    stepSize: 1
-                    implicitWidth: 90
-                }
-
-                Text {
-                    text: "至"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeSmall
-                    color: WxTheme.clTextSecondary
-                }
-
-                SpinBox {
-                    id: maxIntervalSpin
-                    from: minIntervalSpin.value
-                    to: 60
-                    value: panelBackend ? Math.round(panelBackend.sendIntervalMax) : 3
-                    onValueChanged: {
-                        if (panelBackend) panelBackend.sendIntervalMax = value
-                    }
-                    enabled: panelBackend ? panelBackend.inputsEnabled : false
-                    stepSize: 1
-                    implicitWidth: 90
-                }
-
-                Text {
-                    text: "（随机延迟，避免封号）"
-                    font.family: WxTheme.fontFamily
-                    font.pixelSize: WxTheme.fontSizeTiny
-                    color: WxTheme.clTextHint
-                    Layout.fillWidth: true
-                }
-            }
-
-            Item { Layout.preferredHeight: 4 }
-
-            // ── 按钮组 (Fixed Bottom Actions) ──
-            ActionButtons {
-                id: actionsBlock
-                Layout.fillWidth: true
-                Layout.preferredHeight: 32
-                Layout.minimumHeight: 32
-                btnBackend: panelBackend
-                onStartRequested: {
-                    // Quick Frontend Validations
-                    var hasError = false
-                    if (friendsInput.text.trim() === "") {
-                        friendListError.text = "请输入接收好友名单"
-                        hasError = true
-                    }
-                    if (templateInput.text.trim() === "") {
-                        templateError.text = "请输入消息模板"
-                        hasError = true
-                    }
-                    if (hasError) return
-
-                    // Fire sending confirm popup
-                    sendConfirmDialog.open()
-                }
-            }
-        }
     }
 
     // ── Context Menus ──
@@ -532,20 +377,21 @@ Rectangle {
         id: friendsContextMenu
         WxContextMenuItem {
             text: "剪切"
-            iconSource: "../icons/trash.svg" // We can load svg here!
+            iconSource: "../icons/cut.svg"
             shortcutText: "Ctrl+X"
             enabled: friendsInput.selectionStart !== friendsInput.selectionEnd
             onTriggered: friendsInput.cut()
         }
         WxContextMenuItem {
             text: "复制"
-            iconSource: "../icons/export.svg"
+            iconSource: "../icons/copy.svg"
             shortcutText: "Ctrl+C"
             enabled: friendsInput.selectionStart !== friendsInput.selectionEnd
             onTriggered: friendsInput.copy()
         }
         WxContextMenuItem {
             text: "粘贴"
+            iconSource: "../icons/paste.svg"
             shortcutText: "Ctrl+V"
             enabled: friendsInput.canPaste
             onTriggered: friendsInput.paste()
@@ -555,6 +401,12 @@ Rectangle {
                 implicitHeight: 1
                 color: WxTheme.clDivider
             }
+        }
+        WxContextMenuItem {
+            text: "全选"
+            iconSource: "../icons/select_all.svg"
+            shortcutText: "Ctrl+A"
+            onTriggered: friendsInput.selectAll()
         }
         WxContextMenuItem {
             text: "清空名单"
@@ -570,18 +422,21 @@ Rectangle {
         id: templateContextMenu
         WxContextMenuItem {
             text: "剪切"
+            iconSource: "../icons/cut.svg"
             shortcutText: "Ctrl+X"
             enabled: templateInput.selectionStart !== templateInput.selectionEnd
             onTriggered: templateInput.cut()
         }
         WxContextMenuItem {
             text: "复制"
+            iconSource: "../icons/copy.svg"
             shortcutText: "Ctrl+C"
             enabled: templateInput.selectionStart !== templateInput.selectionEnd
             onTriggered: templateInput.copy()
         }
         WxContextMenuItem {
             text: "粘贴"
+            iconSource: "../icons/paste.svg"
             shortcutText: "Ctrl+V"
             enabled: templateInput.canPaste
             onTriggered: templateInput.paste()
@@ -593,12 +448,18 @@ Rectangle {
             }
         }
         WxContextMenuItem {
-            text: "插入 {name} 姓名"
-            iconSource: "../icons/info.svg"
+            text: "插入 {name}"
+            iconSource: "../icons/text_cursor.svg"
             onTriggered: {
                 templateInput.insert(templateInput.cursorPosition, "{name}")
                 templateInput.forceActiveFocus()
             }
+        }
+        WxContextMenuItem {
+            text: "全选"
+            iconSource: "../icons/select_all.svg"
+            shortcutText: "Ctrl+A"
+            onTriggered: templateInput.selectAll()
         }
         WxContextMenuItem {
             text: "清空模板"
@@ -617,16 +478,12 @@ Rectangle {
         }
     }
 
-    // Sending Confirm Popup
-    ConfirmDialog {
-        id: sendConfirmDialog
-        message: "即将向 " + root._friendCount + " 位好友发送消息"
-               + (root._fileCount > 0 ? "，共 " + root._fileCount + " 个文件" : "")
-               + "。是否继续？"
-        confirmText: "确认发送"
-        cancelText: "取消"
-        onConfirmed: {
-            if (panelBackend) panelBackend.start_sending()
-        }
+    // 发送中灰化遮罩
+    Rectangle {
+        anchors.fill: parent
+        color: WxTheme.clBgPrimary
+        opacity: panelBackend && !panelBackend.inputsEnabled ? 0.03 : 0.0
+        visible: opacity > 0
+        z: 10
     }
 }

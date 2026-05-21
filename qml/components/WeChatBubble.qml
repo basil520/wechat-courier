@@ -7,8 +7,10 @@ Row {
 
     property string messageText: ""
     property bool isError: false
+    property bool isOutgoing: false
 
     spacing: 0
+    layoutDirection: root.isOutgoing ? Qt.RightToLeft : Qt.LeftToRight
 
     // 三角尾巴
     Canvas {
@@ -21,9 +23,15 @@ Row {
             var ctx = getContext("2d")
             ctx.fillStyle = root.isError ? WxTheme.clWarningBg : WxTheme.clBubbleTail
             ctx.beginPath()
-            ctx.moveTo(8, 0)
-            ctx.lineTo(0, 6)
-            ctx.lineTo(8, 12)
+            if (root.isOutgoing) {
+                ctx.moveTo(0, 0)
+                ctx.lineTo(8, 6)
+                ctx.lineTo(0, 12)
+            } else {
+                ctx.moveTo(8, 0)
+                ctx.lineTo(0, 6)
+                ctx.lineTo(8, 12)
+            }
             ctx.closePath()
             ctx.fill()
         }
@@ -32,7 +40,7 @@ Row {
     // 气泡主体
     Rectangle {
         id: bubbleRect
-        width: bubbleContent.implicitWidth + 20
+        width: Math.min(bubbleContent.implicitWidth + 20, WxTheme.chatBubbleMaxWidth)
         height: bubbleContent.implicitHeight + 16
         radius: WxTheme.radiusMedium
         color: root.isError ? WxTheme.clWarningBg : WxTheme.clBubbleBg

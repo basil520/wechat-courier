@@ -89,4 +89,49 @@ TestCase {
     function test_shadow_opacity_medium() {
         compare(WxTheme.shadowOpacityMedium, 0.06)
     }
+
+    // Phase 1 (V4) 新增常量测试
+    function test_chat_bg_color() {
+        compare(WxTheme.clChatBg, "#ebebeb")
+    }
+
+    function test_tab_active_color() {
+        compare(WxTheme.clTabActive, "#07c160")
+    }
+
+    function test_progress_track_color() {
+        compare(WxTheme.clProgressTrack, "#e9e9e9")
+    }
+
+    function test_switch_track_off_color() {
+        compare(WxTheme.clSwitchTrackOff, "#dcdfe6")
+    }
+
+    function test_control_height() {
+        compare(WxTheme.controlHeight, 28)
+    }
+
+    function test_tab_height() {
+        compare(WxTheme.tabHeight, 36)
+    }
+
+    function test_status_bar_height() {
+        compare(WxTheme.statusBarHeight, 24)
+    }
+
+    function test_action_bar_height() {
+        compare(WxTheme.actionBarHeight, 40)
+    }
+
+    function test_chat_bubble_max_width() {
+        compare(WxTheme.chatBubbleMaxWidth, 260)
+    }
+
+    function test_chat_file_card_max_width() {
+        compare(WxTheme.chatFileCardMaxWidth, 220)
+    }
+
+    function test_sp_xlarge() {
+        compare(WxTheme.spXLarge, 20)
+    }
 }

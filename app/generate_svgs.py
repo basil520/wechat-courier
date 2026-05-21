@@ -133,6 +133,56 @@ def generate_all_svgs():
   <!-- Subtle log check -->
   <circle cx="40" cy="36" r="3" fill="#07c160" opacity="0.8"/>
   <path d="M38.5 36l1 1 2-2" fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+
+        # ═══════════════════════════════
+        #  Phase 1 (V4) 新增 — 标准操作图标
+        # ═══════════════════════════════
+        "cut.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="6" cy="6" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  <circle cx="6" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M8 7l8 6M8 17l8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>""",
+
+        "copy.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>""",
+
+        "paste.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  <rect x="8" y="2" width="8" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/>
+</svg>""",
+
+        "folder_open.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 19V9a1 1 0 0 0-1-1h-6.5l-1.7-2.6A1 1 0 0 0 11 5H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>""",
+
+        "text_cursor.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 3v18M9 6h6M9 18h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>""",
+
+        "clear_all.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M5 8h14M8 8l2 10h4l2-10M10 5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+
+        "select_all.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M8 12l2.5 2.5L16 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+
+        "user.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="8" r="4" fill="#bdbdbd"/>
+  <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#bdbdbd"/>
+</svg>""",
+
+        "send.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+
+        "clock.svg": """<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M12 7v5l3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>"""
     }
 

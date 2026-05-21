@@ -18,6 +18,17 @@ TestCase {
         property real progressValue: 50.0
         property string progressStatus: "正在发送"
         property string versionInfo: "五阿哥群发助手 v0.2.1"
+        property string previewFriend: "好友1"
+        property string previewGreeting: "友1"
+        property string previewMessage: "你好 友1"
+        property int previewFileCount: 0
+        property var previewFileNames: []
+        property bool useForward: false
+        property real sendIntervalMin: 2.0
+        property real sendIntervalMax: 3.0
+        property var filePathModel: null
+        function get_file_size_at(idx) { return "" }
+        function showToast(msg, type) {}
     }
 
     // 模拟 800x650 的最小受限分辨率窗口
@@ -47,13 +58,13 @@ TestCase {
         verify(mainLayout.width >= 800, "主窗口容器处于最小限制宽度以上")
     }
 
-    function test_dashboard_layout_dimensions() {
-        // 切换至运行态，触发 Setup -> DashboardParallax 视图滑动
+    function test_running_layout_dimensions() {
+        // 切换至运行态，验证布局稳定
         mockBackend.phase = "running"
-        
-        // 等待界面切换动画基本就绪
-        wait(350)
-        
+
+        // 等待界面状态更新
+        wait(200)
+
         compare(mainLayout.width, 800, "在运行态下 MainLayout 宽度依然保持 800")
         compare(mainLayout.height, 650, "在运行态下 MainLayout 高度依然保持 650")
     }

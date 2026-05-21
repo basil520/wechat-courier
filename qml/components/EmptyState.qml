@@ -5,13 +5,23 @@ import "../theme"
 ColumnLayout {
     id: root
 
-    property string iconText: "📋"
+    property string iconText: ""
+    property string iconSource: ""
     property string title: ""
     property string subtitle: ""
 
     spacing: WxTheme.spSmall
 
+    WxIcon {
+        visible: root.iconSource !== ""
+        iconSource: root.iconSource
+        iconSize: 64
+        hoverScale: false
+        Layout.alignment: Qt.AlignHCenter
+    }
+
     Text {
+        visible: root.iconSource === "" && root.iconText !== ""
         text: root.iconText
         font.pixelSize: 36
         horizontalAlignment: Text.AlignHCenter

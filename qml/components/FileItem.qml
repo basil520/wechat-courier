@@ -12,6 +12,7 @@ Rectangle {
     property int fileIndex: -1
     property string filePath: ""
     property var itemBackend: null
+    property bool removable: true
 
     signal removeRequested(int index)
 
@@ -104,8 +105,9 @@ Rectangle {
             }
         }
 
-        // 删除按钮（hover 时显示）
+        // 删除按钮（hover 时显示，发送中隐藏）
         WxIcon {
+            visible: root.removable
             iconSource: "../icons/trash.svg"
             iconSize: 14
             iconColor: mouseArea.containsMouse ? WxTheme.clTextHint : "transparent"
