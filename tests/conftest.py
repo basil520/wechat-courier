@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+"""共享 fixtures 与测试工具"""
+
+import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
+from PySide6.QtCore import QCoreApplication
+
+from app.backend import BackendController
+from app.constants import PHASE_IDLE, PHASE_RUNNING, PHASE_PAUSED, PHASE_DONE
+
+
+@pytest.fixture(scope="session")
+def qapp():
+    """确保 Qt Application 全局唯一"""
+    app = QCoreApplication.instance()
+    if app is None:
+        app = QCoreApplication(sys.argv)
+    yield app
+
+
+@pytest.fixture
+def backend(qapp):
+    """创建独立的 BackendController 实例，测试结束后自动清理"""
+    ctrl = BackendController(version="0.0.0-test")
+    yield ctrl
+    # 清理：停止可能还在运行的 worker，防止 Qt 对象销毁时崩溃
+    if ctrl._worker is not None and ctrl._worker.isRunning():
+        ctrl._worker.request_stop()
+        ctrl._worker.wait(3000)
+    ctrl._worker = None
+
+
+@pytest.fixture
+def mock_worker():
+    """返回一个可复用的 SenderWorker mock"""
+    worker = MagicMock()
+    worker.isRunning.return_value = False
+    worker.progress_updated = MagicMock()
+    worker.current_friend = MagicMock()
+    worker.log_entry = MagicMock()
+    worker.fatal_error = MagicMock()
+    worker.finished = MagicMock()
+    return worker
+
+
+@pytest.fixture
+def mock_wechat_client():
+    """返回一个可复用的 WeChatClient mock"""
+    wx = MagicMock()
+    wx.chat_window = MagicMock()
+    wx.chat_window.send_to = MagicMock()
+    wx.chat_window.send_message_and_file_to = MagicMock()
+    wx.chat_window.upload_files_to_helper = MagicMock(return_value=True)
+    wx.chat_window.forward_recent_merge_to = MagicMock(return_value=True)
+    wx.disconnect = MagicMock()
+    return wx
