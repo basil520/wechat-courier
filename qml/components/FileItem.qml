@@ -18,6 +18,12 @@ Rectangle {
     border.width: 1
     border.color: WxTheme.clBorder
 
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: WxTheme.spSmall
@@ -93,12 +99,5 @@ Rectangle {
                 onClicked: root.removeRequested(root.fileIndex)
             }
         }
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        z: 0
     }
 }
