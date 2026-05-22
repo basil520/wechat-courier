@@ -71,6 +71,14 @@ class TestProcessOneFriendTextOnly:
         assert result.status == "error"
         assert "窗口未找到" in result.detail
 
+    def test_false_return_is_reported_as_error(self, worker, mock_wechat_client):
+        mock_wechat_client.chat_window.send_to.return_value = False
+
+        result = worker._process_one_friend(mock_wechat_client, "Alice")
+
+        assert result.status == "error"
+        assert "发送失败" in result.detail
+
 
 class TestProcessOneFriendWithFiles:
     def test_success_with_files(self, worker, mock_wechat_client):
@@ -79,6 +87,15 @@ class TestProcessOneFriendWithFiles:
         assert result.status == "success"
         assert "每人重复上传" in result.detail
         mock_wechat_client.chat_window.send_message_and_file_to.assert_called_once()
+
+    def test_file_send_false_return_is_reported_as_error(self, worker, mock_wechat_client):
+        worker.file_paths = ["C:/test.pdf"]
+        mock_wechat_client.chat_window.send_message_and_file_to.return_value = False
+
+        result = worker._process_one_friend(mock_wechat_client, "Alice")
+
+        assert result.status == "error"
+        assert "发送失败" in result.detail
 
 
 class TestProcessOneFriendForwardMode:

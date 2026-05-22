@@ -321,6 +321,28 @@ class TestBackendSignals:
         assert backend.phase == PHASE_DONE
         assert backend.inputsEnabled is True
 
+    def test_send_finished_after_error_log_shows_error_toast(self, backend, qtbot):
+        backend.friendListText = "Alice"
+        backend.templateText = "Hi"
+        backend.start_sending()
+        backend._on_log_entry("Alice", "Alice", "error", "发送失败")
+
+        with qtbot.waitSignal(backend.showToast, timeout=1000) as blocker:
+            backend._on_send_finished()
+
+        assert blocker.args == ["发送任务完成，但存在失败项！", "error"]
+
+    def test_send_finished_after_fatal_error_shows_error_toast(self, backend, qtbot):
+        backend.friendListText = "Alice"
+        backend.templateText = "Hi"
+        backend.start_sending()
+        backend._on_fatal_error("连接失败")
+
+        with qtbot.waitSignal(backend.showToast, timeout=1000) as blocker:
+            backend._on_send_finished()
+
+        assert blocker.args == ["发送任务失败！", "error"]
+
 
 class TestBackendPhase3:
     def test_send_intervals(self, backend, qtbot):

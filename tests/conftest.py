@@ -89,8 +89,8 @@ def mock_wechat_client():
     """返回一个可复用的 WeChatClient mock"""
     wx = MagicMock()
     wx.chat_window = MagicMock()
-    wx.chat_window.send_to = MagicMock()
-    wx.chat_window.send_message_and_file_to = MagicMock()
+    wx.chat_window.send_to = MagicMock(return_value=True)
+    wx.chat_window.send_message_and_file_to = MagicMock(return_value=True)
     wx.chat_window.upload_files_to_helper = MagicMock(return_value=True)
     wx.chat_window.forward_recent_merge_to = MagicMock(return_value=True)
     wx.disconnect = MagicMock()

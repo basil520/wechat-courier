@@ -150,12 +150,16 @@ class SenderWorker(QThread):
                     raise RuntimeError("合并转发失败（详见日志）")
                 detail = f"文件 {len(self.file_paths)} 个（合并转发 + 留言）"
             elif self.file_paths:
-                wx.chat_window.send_message_and_file_to(
+                ok = wx.chat_window.send_message_and_file_to(
                     friend, final_message, self.file_paths, target_type="contact",
                 )
+                if ok is not True:
+                    raise RuntimeError("发送失败（详见日志）")
                 detail = f"文件 {len(self.file_paths)} 个（每人重复上传）"
             else:
-                wx.chat_window.send_to(friend, final_message, target_type="contact")
+                ok = wx.chat_window.send_to(friend, final_message, target_type="contact")
+                if ok is not True:
+                    raise RuntimeError("发送失败（详见日志）")
                 detail = "仅文本"
 
             return SendResult(friend, greeting, "success", detail)

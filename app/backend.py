@@ -95,6 +95,8 @@ class BackendController(QObject):
         self._worker: SenderWorker | None = None
         self._worker_factory = worker_factory or SenderWorker
         self._prev_phase_for_pause = PHASE_IDLE
+        self._send_error_count = 0
+        self._send_fatal_error_seen = False
 
         # 初始化只读属性
         self.demoModeChanged.emit(is_demo_mode())
@@ -421,6 +423,8 @@ class BackendController(QObject):
 
         self._fatal_error = ""
         self.fatalErrorChanged.emit("")
+        self._send_error_count = 0
+        self._send_fatal_error_seen = False
 
         # 创建并配置工作线程
         self._worker = self._worker_factory()
@@ -632,10 +636,13 @@ class BackendController(QObject):
 
     @Slot(str, str, str, str)
     def _on_log_entry(self, friend: str, greeting: str, status: str, detail: str):
+        if status != "success":
+            self._send_error_count += 1
         self.logEntryAdded.emit(friend, greeting, status, detail)
 
     @Slot(str)
     def _on_fatal_error(self, error: str):
+        self._send_fatal_error_seen = True
         self._fatal_error = error
         self.fatalErrorChanged.emit(error)
 
@@ -648,7 +655,12 @@ class BackendController(QObject):
         self._progress_status = "已结束"
         self.progressStatusChanged.emit(self._progress_status)
         if was_running:
-            self.showToast.emit("发送任务完成！", "success")
+            if self._send_fatal_error_seen:
+                self.showToast.emit("发送任务失败！", "error")
+            elif self._send_error_count:
+                self.showToast.emit("发送任务完成，但存在失败项！", "error")
+            else:
+                self.showToast.emit("发送任务完成！", "success")
 
     def _set_inputs_enabled(self, enabled: bool):
         self._inputs_enabled = enabled

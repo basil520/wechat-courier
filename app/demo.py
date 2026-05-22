@@ -12,12 +12,15 @@ _DEMO_MODE = False
 class MockChatWindow:
     def send_to(self, *a, **kw):
         time.sleep(0.3)
+        return True
 
     def send_file_to(self, *a, **kw):
-        pass
+        time.sleep(0.3)
+        return True
 
     def send_message_and_file_to(self, *a, **kw):
         time.sleep(0.3)
+        return True
 
     def upload_files_to_helper(self, *a, **kw):
         time.sleep(0.3)

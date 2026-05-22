@@ -231,7 +231,14 @@ class WeChatWindow:
 
         if not is_window_visible(hwnd):
             if not self._restore_via_tray_icon():
-                logger.warning("检测到微信窗口不可见，但未能通过托盘图标恢复，已跳过窗口兜底激活。")
+                logger.warning("检测到微信窗口不可见，托盘恢复失败，尝试 Win32 兜底恢复。")
+                bring_window_to_front(hwnd)
+                time.sleep(_TRAY_RESTORE_SETTLE_SECONDS)
+                if is_window_visible(hwnd):
+                    logger.info("已通过 Win32 兜底恢复微信窗口。")
+                    return True
+
+                logger.warning("微信窗口仍不可见，无法继续自动化操作。")
                 return False
 
             deadline = time.time() + _TRAY_OVERFLOW_WAIT_SECONDS
@@ -504,6 +511,11 @@ class WeChatWindow:
         logger.info(f"找到微信窗口: HWND={self._hwnd}")
         self._activate_hwnd(self._hwnd)
         time.sleep(OPERATION_INTERVAL)
+        if not is_window_visible(self._hwnd):
+            raise WeChatNotFoundError(
+                "检测到微信窗口不可见，且无法自动恢复。"
+                "请从托盘或任务栏打开微信主窗口后重试。"
+            )
 
         # 第4步：如有必要，重启并在 _restart_and_reconnect 内部完成重连。
         if settings_changed:
