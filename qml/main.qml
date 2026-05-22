@@ -26,7 +26,7 @@ ApplicationWindow {
 
     function syncWindowVisuals() {
         if (typeof backend !== "undefined" && backend) {
-            backend.updateWindowVisuals(root.winId(), WxTheme.isDark, WxTheme.glassEnabled, WxTheme.glassOpacity)
+            backend.updateWindowVisuals(root.winId, WxTheme.isDark, WxTheme.glassEnabled, WxTheme.glassOpacity)
         }
     }
 
