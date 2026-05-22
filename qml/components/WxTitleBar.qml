@@ -39,6 +39,15 @@ Rectangle {
         }
     }
 
+    function toggleMaximized() {
+        if (!root.window) return
+        if (root.window.visibility === Window.Maximized) {
+            root.window.showNormal()
+        } else {
+            root.window.applySnapMode("maximize")
+        }
+    }
+
     // Bottom divider
     Rectangle {
         anchors.left: parent.left
@@ -48,23 +57,34 @@ Rectangle {
         color: WxTheme.clGlassDivider
     }
 
-    // System Window Move Handler (Click-to-drag)
-    MouseArea {
+    // System Window Move Handler (custom drag keeps snap preview available)
+    Item {
+        id: dragZone
         anchors.fill: parent
         anchors.rightMargin: 322 // Leave space for visual controls and window controls
-        
-        onPressed: {
-            if (root.window) {
-                root.window.startSystemMove()
-            }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            onDoubleTapped: root.toggleMaximized()
         }
-        
-        onDoubleClicked: {
-            if (root.window) {
-                if (root.window.visibility === Window.Maximized) {
-                    root.window.showNormal()
+
+        DragHandler {
+            id: titleDragHandler
+            target: null
+            acceptedButtons: Qt.LeftButton
+
+            onActiveChanged: {
+                if (!root.window) return
+                if (active) {
+                    root.window.beginTitleBarDrag(centroid.position.x, centroid.position.y)
                 } else {
-                    root.window.showMaximized()
+                    root.window.finishTitleBarDrag()
+                }
+            }
+
+            onTranslationChanged: {
+                if (active && root.window) {
+                    root.window.updateTitleBarDrag(translation.x, translation.y)
                 }
             }
         }
@@ -267,15 +287,7 @@ Rectangle {
                     id: maxMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: {
-                        if (root.window) {
-                            if (root.window.visibility === Window.Maximized) {
-                                root.window.showNormal()
-                            } else {
-                                root.window.showMaximized()
-                            }
-                        }
-                    }
+                    onClicked: root.toggleMaximized()
                 }
             }
 
@@ -303,6 +315,114 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    component LayoutMenuButton: Rectangle {
+        property string label: ""
+        property string description: ""
+        property var action
+
+        width: 46
+        height: 34
+        radius: 6
+        color: buttonArea.containsMouse ? WxTheme.clBgHover : "transparent"
+
+        Text {
+            anchors.centerIn: parent
+            text: label
+            font.family: WxTheme.fontFamily
+            font.pixelSize: WxTheme.fontSizeTiny
+            font.bold: true
+            color: WxTheme.clTextPrimary
+        }
+
+        MouseArea {
+            id: buttonArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (action) action()
+            }
+        }
+
+        Rectangle {
+            visible: buttonArea.containsMouse
+            z: 20
+            width: tooltipText.implicitWidth + 16
+            height: 24
+            radius: 6
+            color: WxTheme.clToastBg
+            x: parent.width / 2 - width / 2
+            y: parent.height + 6
+
+            Text {
+                id: tooltipText
+                anchors.centerIn: parent
+                text: description
+                font.family: WxTheme.fontFamily
+                font.pixelSize: WxTheme.fontSizeTiny
+                color: WxTheme.clToastText
+            }
+        }
+    }
+
+    Rectangle {
+        id: layoutMenu
+        z: 500
+        visible: maxMouseArea.containsMouse || menuMouseArea.containsMouse
+        x: Math.max(8, Math.min(root.width - width - 8, maxButton.x + maxButton.width - width))
+        y: root.height - 1
+        width: 204
+        height: 42
+        radius: 8
+        color: WxTheme.clSurfaceStrong
+        border.color: WxTheme.clSurfaceBorder
+        border.width: 1
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 4
+
+            LayoutMenuButton {
+                label: "全屏"
+                description: "全屏预览"
+                action: function() {
+                    if (root.window) root.window.enterFullScreenPreview()
+                }
+            }
+
+            LayoutMenuButton {
+                label: "左半"
+                description: "贴左侧"
+                action: function() {
+                    if (root.window) root.window.applySnapMode("left")
+                }
+            }
+
+            LayoutMenuButton {
+                label: "右半"
+                description: "贴右侧"
+                action: function() {
+                    if (root.window) root.window.applySnapMode("right")
+                }
+            }
+
+            LayoutMenuButton {
+                label: "还原"
+                description: "居中还原"
+                action: function() {
+                    if (root.window) root.window.centerAndRestore()
+                }
+            }
+        }
+
+        MouseArea {
+            id: menuMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
         }
     }
 

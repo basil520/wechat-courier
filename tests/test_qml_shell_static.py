@@ -23,6 +23,42 @@ def test_main_window_uses_frameless_custom_titlebar():
     assert "startSystemResize" in qml
 
 
+def test_main_window_exposes_snap_and_fullscreen_contract():
+    qml = read_qml("qml/main.qml")
+
+    for token in (
+        "property string snapPreviewMode",
+        "function beginTitleBarDrag",
+        "function updateTitleBarDrag",
+        "function finishTitleBarDrag",
+        "function showSnapPreview",
+        "function applySnapMode",
+        "function toggleFullScreenPreview",
+        "function enterFullScreenPreview",
+        "WindowTransparentForInput",
+        "Shortcut",
+        "F11",
+        "Esc",
+    ):
+        assert token in qml
+
+
+def test_titlebar_exposes_window_layout_controls():
+    title_bar = read_qml("qml/components/WxTitleBar.qml")
+
+    for token in (
+        "beginTitleBarDrag",
+        "updateTitleBarDrag",
+        "finishTitleBarDrag",
+        "layoutMenu",
+        "applySnapMode(\"left\")",
+        "applySnapMode(\"right\")",
+        "centerAndRestore",
+        "enterFullScreenPreview",
+    ):
+        assert token in title_bar
+
+
 def test_theme_toggle_moves_out_of_tab_bar():
     tab_bar = read_qml("qml/components/WxTabBar.qml")
     title_bar = read_qml("qml/components/WxTitleBar.qml")
