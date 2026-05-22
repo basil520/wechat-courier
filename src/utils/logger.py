@@ -1,39 +1,63 @@
 # -*- coding: utf-8 -*-
-"""日志工具"""
+"""Logging helpers."""
+
 import json
 import logging
 import sys
 from pathlib import Path
 
-from ..config import LOG_LEVEL, LOG_FORMAT, LOG_FILE, SEND_AUDIT_LOG_FILE
+from ..config import (
+    LOG_FILE,
+    LOG_FORMAT,
+    LOG_LEVEL,
+    SEND_AUDIT_LOG_FILE,
+    get_default_log_dir,
+)
 
 
 def _ensure_parent_dir(file_path: str) -> None:
-    """在需要时创建日志文件的父目录。"""
     Path(file_path).parent.mkdir(parents=True, exist_ok=True)
 
 
+def _log_path_candidates(configured_path: str, fallback_name: str):
+    configured = Path(configured_path)
+    fallback = get_default_log_dir() / fallback_name
+
+    yield configured
+    if fallback != configured:
+        yield fallback
+
+
+def _create_file_handler(
+    configured_path: str,
+    fallback_name: str,
+    formatter: logging.Formatter,
+):
+    for path in _log_path_candidates(configured_path, fallback_name):
+        try:
+            _ensure_parent_dir(str(path))
+            handler = logging.FileHandler(str(path), encoding="utf-8")
+            handler.setFormatter(formatter)
+            return handler
+        except OSError:
+            continue
+    return None
+
+
 def get_logger(name: str) -> logging.Logger:
-    """
-    获取已配置的日志器实例。
-
-    Args:
-        name: 日志器名称（通常使用 __name__）
-
-    Returns:
-        logging.Logger: 已配置的日志器
-    """
+    """Return a configured logger without failing when file logging is unavailable."""
     logger = logging.getLogger(name)
 
     if not logger.handlers:
+        formatter = logging.Formatter(LOG_FORMAT)
         stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+        stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
 
-        _ensure_parent_dir(LOG_FILE)
-        file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
-        file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
-        logger.addHandler(file_handler)
+        file_handler = _create_file_handler(LOG_FILE, "wx4py.log", formatter)
+        if file_handler is not None:
+            logger.addHandler(file_handler)
+
         logger.setLevel(getattr(logging, LOG_LEVEL.upper(), logging.INFO))
         logger.propagate = False
 
@@ -41,14 +65,20 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def get_send_audit_logger() -> logging.Logger:
-    """获取专用于发送审计记录的结构化日志器。"""
+    """Return the structured send audit logger."""
     logger = logging.getLogger("wx4py.send_audit")
 
     if not logger.handlers:
-        _ensure_parent_dir(SEND_AUDIT_LOG_FILE)
-        file_handler = logging.FileHandler(SEND_AUDIT_LOG_FILE, encoding="utf-8")
-        file_handler.setFormatter(logging.Formatter("%(message)s"))
-        logger.addHandler(file_handler)
+        file_handler = _create_file_handler(
+            SEND_AUDIT_LOG_FILE,
+            "wx4py_send_audit.jsonl",
+            logging.Formatter("%(message)s"),
+        )
+        if file_handler is not None:
+            logger.addHandler(file_handler)
+        else:
+            logger.addHandler(logging.NullHandler())
+
         logger.setLevel(logging.INFO)
         logger.propagate = False
 
@@ -56,7 +86,7 @@ def get_send_audit_logger() -> logging.Logger:
 
 
 def log_send_audit(payload: dict) -> None:
-    """写入一条结构化发送审计记录（JSONL 格式）。"""
+    """Write one structured send audit entry in JSONL format."""
     get_send_audit_logger().info(
         json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     )

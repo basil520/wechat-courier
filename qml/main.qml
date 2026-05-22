@@ -51,6 +51,7 @@ ApplicationWindow {
         root.y = (Screen.height - root.height) / 2
         if (typeof backend !== "undefined" && backend) {
             root.title = backend.versionInfo
+            WxTheme.isDark = backend.isDark
             WxTheme.glassEnabled = backend.glassEnabled
             WxTheme.glassOpacity = backend.glassOpacity
             root.syncWindowVisuals()
@@ -61,6 +62,9 @@ ApplicationWindow {
         target: typeof backend !== "undefined" ? backend : null
         function onVersionInfoChanged() {
             root.title = backend.versionInfo
+        }
+        function onIsDarkChanged() {
+            WxTheme.isDark = backend.isDark
         }
     }
 

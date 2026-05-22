@@ -210,6 +210,7 @@ Rectangle {
                     onClicked: {
                         themeIcon.rotation += 360
                         WxTheme.isDark = !WxTheme.isDark
+                        if (root.titleBackend) root.titleBackend.isDark = WxTheme.isDark
                     }
                 }
             }

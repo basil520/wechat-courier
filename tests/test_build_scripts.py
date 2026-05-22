@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Build script regression tests."""
 
-import importlib.util
 import dis
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -45,11 +45,16 @@ def test_build_script_does_not_call_missing_parent_comtypes_pregen(monkeypatch):
     build.main()
 
     assert calls
-    assert calls[0][0][:3] == [build.sys.executable, "-m", "PyInstaller"]
-    assert calls[0][1] == ROOT
-    assert str(ROOT / "build" / "build.spec") in calls[0][0]
-    assert "--name=五阿哥群发助手" not in calls[0][0]
-    assert "--windowed" not in calls[0][0]
+    pyinstaller_calls = [
+        call for call in calls
+        if call[0][:3] == [build.sys.executable, "-m", "PyInstaller"]
+    ]
+    assert pyinstaller_calls
+    pyinstaller_cmd, pyinstaller_cwd, _ = pyinstaller_calls[0]
+    assert pyinstaller_cwd == ROOT
+    assert str(ROOT / "build" / "build.spec") in pyinstaller_cmd
+    assert not any(part.startswith("--name=") for part in pyinstaller_cmd)
+    assert "--windowed" not in pyinstaller_cmd
     assert not any(str(ROOT.parent / "pregen_comtypes.py") in part for cmd, _, _ in calls for part in cmd)
 
 
@@ -59,8 +64,9 @@ def test_build_spec_uses_repository_root_for_sources_and_hooks():
     assert "os.path.dirname(os.path.dirname(SPECPATH))" not in spec_text
     assert "ROOT = os.path.dirname(SPECPATH)" in spec_text
     assert "PROJECT_ROOT = os.path.dirname(ROOT)" not in spec_text
-    assert 'os.path.join(ROOT, "src")' in spec_text
-    assert 'pathex=[ROOT]' in spec_text
+    assert 'collect_submodules("src")' in spec_text
+    assert "os.path.join(ROOT, \"src\")" not in spec_text
+    assert "pathex=[ROOT]" in spec_text
     assert 'os.path.join(ROOT, "build", "_comtypes_hook.py")' in spec_text
 
 
@@ -76,6 +82,24 @@ def test_build_spec_includes_qml_svg_assets():
     spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
 
     assert '".svg"' in spec_text
+
+
+def test_installer_shortcuts_use_embedded_exe_icon():
+    script = (ROOT / "installer" / "setup.nsi").read_text(encoding="utf-8-sig")
+
+    assert '"$INSTDIR\\assets\\app.ico"' not in script
+    assert (
+        'CreateShortCut "$DESKTOP\\${PRODUCT_NAME}.lnk" '
+        '"$INSTDIR\\${PRODUCT_NAME}.exe" "" "$INSTDIR\\${PRODUCT_NAME}.exe"'
+    ) in script
+    assert (
+        'CreateShortCut "$SMPROGRAMS\\${PRODUCT_NAME}\\${PRODUCT_NAME}.lnk" '
+        '"$INSTDIR\\${PRODUCT_NAME}.exe" "" "$INSTDIR\\${PRODUCT_NAME}.exe"'
+    ) in script
+    assert (
+        'WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" '
+        '"$INSTDIR\\${PRODUCT_NAME}.exe"'
+    ) in script
 
 
 def test_build_spec_includes_qml_singleton_metadata():

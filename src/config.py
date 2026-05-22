@@ -3,6 +3,19 @@
 import os
 from pathlib import Path
 
+
+def get_default_log_dir() -> Path:
+    """Return the per-user log directory used by installed builds."""
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        return Path(local_app_data) / "WxAuto" / "logs"
+
+    app_data = os.environ.get("APPDATA")
+    if app_data:
+        return Path(app_data) / "WxAuto" / "logs"
+
+    return Path.home() / ".wxauto" / "logs"
+
 # 超时设置（秒）
 SEARCH_TIMEOUT = 5
 OPERATION_INTERVAL = 0.3
@@ -27,8 +40,8 @@ ALLOWED_GROUPS = tuple(
 # 日志配置
 LOG_LEVEL = os.environ.get('WECHAT_LOG_LEVEL', 'INFO')
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LOG_FILE = os.environ.get("WECHAT_LOG_FILE", str(Path.cwd() / "wx4py.log"))
+LOG_FILE = os.environ.get("WECHAT_LOG_FILE", str(get_default_log_dir() / "wx4py.log"))
 SEND_AUDIT_LOG_FILE = os.environ.get(
     "WECHAT_SEND_AUDIT_LOG_FILE",
-    str(Path.cwd() / "wx4py_send_audit.jsonl"),
+    str(get_default_log_dir() / "wx4py_send_audit.jsonl"),
 )

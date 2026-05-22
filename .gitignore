@@ -17,3 +17,4 @@ EOF
 docs/
 scratch/
 /dist/
+/comtypes_gen/

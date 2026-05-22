@@ -46,6 +46,7 @@ class BackendController(QObject):
     fileSizesChanged = Signal(list)
     sendIntervalMinChanged = Signal(float)
     sendIntervalMaxChanged = Signal(float)
+    isDarkChanged = Signal(bool)
     glassEnabledChanged = Signal(bool)
     glassOpacityChanged = Signal(int)
     showToast = Signal(str, str)
@@ -81,6 +82,7 @@ class BackendController(QObject):
         self._version = version
         self._inputs_enabled = True
         self._demo_mode = is_demo_mode()
+        self._is_dark = self._settings.value("isDark", False, type=bool)
         self._send_interval_min = 2.0
         self._send_interval_max = 3.0
         self._settings = settings or QSettings("wx4py", "WeChatCourier")
@@ -277,6 +279,18 @@ class BackendController(QObject):
             self.sendIntervalMaxChanged.emit(value)
 
     sendIntervalMax = Property(float, _get_send_interval_max, _set_send_interval_max, notify=sendIntervalMaxChanged)
+
+    # ── isDark ──
+    def _get_is_dark(self) -> bool:
+        return self._is_dark
+
+    def _set_is_dark(self, value: bool):
+        if self._is_dark != value:
+            self._is_dark = value
+            self._settings.setValue("isDark", value)
+            self.isDarkChanged.emit(value)
+
+    isDark = Property(bool, _get_is_dark, _set_is_dark, notify=isDarkChanged)
 
     # ── glassEnabled ──
     def _get_glass_enabled(self) -> bool:

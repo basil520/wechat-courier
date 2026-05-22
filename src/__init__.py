@@ -1,62 +1,50 @@
 # -*- coding: utf-8 -*-
-"""
-wx4py - Python 微信自动化工具
+"""wx4py public package exports."""
 
-基于 UIAutomation 的微信自动化 Python 库，支持 Windows Qt 版本微信客户端。
-"""
+from importlib import import_module
 
 from ._version import __version__
-from .ai import AIClient, AIConfig, AIResponder
-from .client import WeChatClient
-from .features.messaging.forwarder import (
-    ForwardPayload,
-    ForwardRuleHandler,
-    ForwardTarget,
-    GroupForwardRule,
-)
-from .features.messaging.listener import MessageEvent, WeChatGroupListener
-from .features.messaging.processor import (
-    AsyncCallbackHandler,
-    CallbackHandler,
-    ForwardAction,
-    MessageAction,
-    MessageHandler,
-    ReplyAction,
-    WeChatGroupProcessor,
-)
-from .core.exceptions import (
-    WeChatError,
-    WeChatNotFoundError,
-    WeChatNotConnectedError,
-    ControlNotFoundError,
-    TargetNotFoundError,
-    RegistryError,
-)
 
 __author__ = "wx4py Team"
 
-__all__ = [
-    "WeChatClient",
-    "AIClient",
-    "AIConfig",
-    "AIResponder",
-    "MessageEvent",
-    "WeChatGroupListener",
-    "MessageAction",
-    "ReplyAction",
-    "ForwardAction",
-    "MessageHandler",
-    "CallbackHandler",
-    "AsyncCallbackHandler",
-    "WeChatGroupProcessor",
-    "ForwardTarget",
-    "ForwardPayload",
-    "GroupForwardRule",
-    "ForwardRuleHandler",
-    "WeChatError",
-    "WeChatNotFoundError",
-    "WeChatNotConnectedError",
-    "ControlNotFoundError",
-    "TargetNotFoundError",
-    "RegistryError",
-]
+_LAZY_EXPORTS = {
+    "WeChatClient": (".client", "WeChatClient"),
+    "AIClient": (".ai", "AIClient"),
+    "AIConfig": (".ai", "AIConfig"),
+    "AIResponder": (".ai", "AIResponder"),
+    "ForwardPayload": (".features.messaging.forwarder", "ForwardPayload"),
+    "ForwardRuleHandler": (".features.messaging.forwarder", "ForwardRuleHandler"),
+    "ForwardTarget": (".features.messaging.forwarder", "ForwardTarget"),
+    "GroupForwardRule": (".features.messaging.forwarder", "GroupForwardRule"),
+    "MessageEvent": (".features.messaging.listener", "MessageEvent"),
+    "WeChatGroupListener": (".features.messaging.listener", "WeChatGroupListener"),
+    "AsyncCallbackHandler": (".features.messaging.processor", "AsyncCallbackHandler"),
+    "CallbackHandler": (".features.messaging.processor", "CallbackHandler"),
+    "ForwardAction": (".features.messaging.processor", "ForwardAction"),
+    "MessageAction": (".features.messaging.processor", "MessageAction"),
+    "MessageHandler": (".features.messaging.processor", "MessageHandler"),
+    "ReplyAction": (".features.messaging.processor", "ReplyAction"),
+    "WeChatGroupProcessor": (".features.messaging.processor", "WeChatGroupProcessor"),
+    "ControlNotFoundError": (".core.exceptions", "ControlNotFoundError"),
+    "RegistryError": (".core.exceptions", "RegistryError"),
+    "TargetNotFoundError": (".core.exceptions", "TargetNotFoundError"),
+    "WeChatError": (".core.exceptions", "WeChatError"),
+    "WeChatNotConnectedError": (".core.exceptions", "WeChatNotConnectedError"),
+    "WeChatNotFoundError": (".core.exceptions", "WeChatNotFoundError"),
+}
+
+__all__ = ["__version__", *_LAZY_EXPORTS]
+
+
+def __getattr__(name):
+    if name not in _LAZY_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    module_name, attribute_name = _LAZY_EXPORTS[name]
+    value = getattr(import_module(module_name, __name__), attribute_name)
+    globals()[name] = value
+    return value
+
+
+def __dir__():
+    return sorted(__all__)

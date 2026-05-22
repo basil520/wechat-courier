@@ -4,6 +4,7 @@ import os
 import sys
 
 from build.pyinstaller_filters import filter_qt_artifacts
+from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 ROOT = os.path.dirname(SPECPATH)  # WxAuto/
@@ -17,9 +18,9 @@ if os.path.isdir(comtypes_gen_dir):
     datas.append((comtypes_gen_dir, "comtypes/gen"))
 
 # ═══════════════════════════════════════
-#  src 包整体打包
+#  src 包 — 通过 collect_submodules 自动收集为可导入模块
+#  不再作为 datas 复制，避免与 frozen archive 中的编译模块冲突
 # ═══════════════════════════════════════
-datas.append((os.path.join(ROOT, "src"), "src"))
 
 # ═══════════════════════════════════════
 #  QML 文件与图标资源
@@ -86,11 +87,10 @@ a = Analysis(
         # comtypes
         "comtypes", "comtypes.client", "comtypes.gen",
         "comtypes.server",
-        # src 子包
-        "src", "src.core", "src.features", "src.features.messaging",
-        "src.utils", "src.ai",
+        # src 子包 — 自动收集全部子模块，避免手动遗漏
+        *collect_submodules("src"),
         # 第三方
-        "PIL", "PIL.Image", "markdown", "pyperclip",
+        "PIL", "PIL.Image", "PIL.ImageGrab", "markdown", "pyperclip",
     ],
     hookspath=[],
     hooksconfig={},
