@@ -84,7 +84,6 @@ def hit_test_client_point(x: int, y: int, metrics: FramelessHitTestMetrics) -> i
     scale = float(metrics.dpi_scale or 1.0)
     border = _scaled(metrics.resize_border_width, scale)
     title_height = _scaled(metrics.title_bar_height, scale)
-    button_width = _scaled(metrics.caption_button_width, scale)
     drag_right_margin = _scaled(metrics.drag_right_margin, scale)
 
     on_left = x < border
@@ -110,11 +109,7 @@ def hit_test_client_point(x: int, y: int, metrics: FramelessHitTestMetrics) -> i
         return HTBOTTOM
 
     if y < title_height:
-        max_left = width - button_width * 2
-        max_right = width - button_width
         drag_right = max(0, width - drag_right_margin)
-        if max_left <= x < max_right:
-            return HTMAXBUTTON
         if x < drag_right:
             return HTCAPTION
 
@@ -457,6 +452,8 @@ def install_frameless_window_hit_test(hwnd_val: int) -> bool:
                     and dwmapi.DwmDefWindowProc(hwnd, msg, wparam, lparam, ctypes.byref(dwm_result))
                     and dwm_result.value != HTCLIENT
                 ):
+                    if dwm_result.value == HTMAXBUTTON:
+                        return HTCLIENT
                     return dwm_result.value
             except Exception:
                 pass

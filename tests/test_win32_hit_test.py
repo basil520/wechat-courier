@@ -21,7 +21,7 @@ def test_hit_test_maps_custom_titlebar_regions():
     metrics = wh.FramelessHitTestMetrics(client_width=960, client_height=780)
 
     assert wh.hit_test_client_point(500, 20, metrics) == wh.HTCAPTION
-    assert wh.hit_test_client_point(890, 20, metrics) == wh.HTMAXBUTTON
+    assert wh.hit_test_client_point(890, 20, metrics) == wh.HTCLIENT
     assert wh.hit_test_client_point(700, 20, metrics) == wh.HTCLIENT
     assert wh.hit_test_client_point(930, 20, metrics) == wh.HTCLIENT
     assert wh.hit_test_client_point(300, 80, metrics) == wh.HTCLIENT
@@ -35,7 +35,7 @@ def test_hit_test_scales_qml_metrics_for_high_dpi():
     )
 
     assert wh.hit_test_client_point(1000, 40, metrics) == wh.HTCAPTION
-    assert wh.hit_test_client_point(1780, 40, metrics) == wh.HTMAXBUTTON
+    assert wh.hit_test_client_point(1780, 40, metrics) == wh.HTCLIENT
     assert wh.hit_test_client_point(1400, 40, metrics) == wh.HTCLIENT
 
 
