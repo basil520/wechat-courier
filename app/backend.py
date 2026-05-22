@@ -82,10 +82,10 @@ class BackendController(QObject):
         self._version = version
         self._inputs_enabled = True
         self._demo_mode = is_demo_mode()
+        self._settings = settings or QSettings("wx4py", "WeChatCourier", self)
         self._is_dark = self._settings.value("isDark", False, type=bool)
         self._send_interval_min = 2.0
         self._send_interval_max = 3.0
-        self._settings = settings or QSettings("wx4py", "WeChatCourier")
         self._glass_enabled = self._settings.value("visual/glassEnabled", True, type=bool)
         self._glass_opacity = self._clamp_glass_opacity(
             self._settings.value("visual/glassOpacity", 72, type=int)
@@ -288,6 +288,7 @@ class BackendController(QObject):
         if self._is_dark != value:
             self._is_dark = value
             self._settings.setValue("isDark", value)
+            self._settings.sync()
             self.isDarkChanged.emit(value)
 
     isDark = Property(bool, _get_is_dark, _set_is_dark, notify=isDarkChanged)

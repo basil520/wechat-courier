@@ -406,6 +406,25 @@ class TestBackendWindowVisualSettings:
         assert backend.glassEnabled is True
         assert backend.glassOpacity == 72
 
+    def test_theme_mode_is_loaded_from_previous_session(self, qapp, tmp_path):
+        settings = self._settings(tmp_path)
+        settings.setValue("isDark", True)
+        settings.sync()
+
+        backend = BackendController(version="0.0.0-test", settings=settings)
+
+        assert backend.isDark is True
+
+    def test_theme_mode_is_persisted_and_emits_signal(self, qapp, tmp_path, qtbot):
+        settings = self._settings(tmp_path)
+        backend = BackendController(version="0.0.0-test", settings=settings)
+
+        with qtbot.waitSignal(backend.isDarkChanged, timeout=1000) as blocker:
+            backend.isDark = True
+
+        assert blocker.args == [True]
+        assert settings.value("isDark", False, type=bool) is True
+
     def test_glass_enabled_is_persisted_and_emits_signal(self, qapp, tmp_path, qtbot):
         settings = self._settings(tmp_path)
         backend = BackendController(version="0.0.0-test", settings=settings)
