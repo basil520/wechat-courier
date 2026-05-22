@@ -353,7 +353,10 @@ Rectangle {
         id: layoutMenu
         z: 500
         visible: maxMouseArea.containsMouse || menuMouseArea.containsMouse
-        x: Math.max(8, Math.min(root.width - width - 8, maxButton.x + maxButton.width - width))
+        x: {
+            var buttonPos = maxButton.mapToItem(root, 0, 0)
+            return Math.max(8, Math.min(root.width - width - 8, buttonPos.x + maxButton.width - width))
+        }
         y: root.height - 1
         width: 204
         height: 42

@@ -72,6 +72,13 @@ def test_titlebar_exposes_window_layout_controls():
         assert unsafe_token not in title_bar
 
 
+def test_titlebar_layout_menu_uses_root_coordinates():
+    title_bar = read_qml("qml/components/WxTitleBar.qml")
+
+    assert "maxButton.mapToItem(root" in title_bar
+    assert "maxButton.x + maxButton.width - width" not in title_bar
+
+
 def test_theme_toggle_moves_out_of_tab_bar():
     tab_bar = read_qml("qml/components/WxTabBar.qml")
     title_bar = read_qml("qml/components/WxTitleBar.qml")
