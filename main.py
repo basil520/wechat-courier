@@ -9,6 +9,7 @@ from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 
 from app.backend import BackendController
 from app.demo import is_demo_mode
+from app import win32_helper
 
 try:
     from src._version import __version__
@@ -53,8 +54,12 @@ def main():
     qml_main = os.path.join(get_qml_dir(), "main.qml")
     engine.load(QUrl.fromLocalFile(qml_main))
 
-    if not engine.rootObjects():
+    root_objects = engine.rootObjects()
+    if not root_objects:
         sys.exit(-1)
+
+    if sys.platform == "win32":
+        win32_helper.install_frameless_window_hit_test(int(root_objects[0].winId()))
 
     sys.exit(app.exec())
 

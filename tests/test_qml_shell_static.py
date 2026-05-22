@@ -17,10 +17,12 @@ def read_qml(path: str) -> str:
 
 def test_main_window_uses_frameless_custom_titlebar():
     qml = read_qml("qml/main.qml")
+    main_py = read_qml("main.py")
 
     assert "Qt.FramelessWindowHint" in qml
     assert "WxTitleBar" in qml
     assert "startSystemResize" in qml
+    assert "install_frameless_window_hit_test" in main_py
 
 
 def test_main_window_exposes_snap_and_fullscreen_contract():

@@ -7,6 +7,7 @@ and immersive dark-mode titlebars to the native PySide6 window frame.
 
 import sys
 import ctypes
+from dataclasses import dataclass
 
 # Only expose active bindings on Windows
 if sys.platform == "win32":
@@ -21,6 +22,165 @@ if sys.platform == "win32":
 else:
     dwmapi = None
     user32 = None
+
+
+WM_NCHITTEST = 0x0084
+
+HTCLIENT = 1
+HTLEFT = 10
+HTRIGHT = 11
+HTTOP = 12
+HTTOPLEFT = 13
+HTTOPRIGHT = 14
+HTBOTTOM = 15
+HTBOTTOMLEFT = 16
+HTBOTTOMRIGHT = 17
+HTCAPTION = 2
+HTMAXBUTTON = 9
+
+GWL_STYLE = -16
+GWLP_WNDPROC = -4
+
+WS_CAPTION = 0x00C00000
+WS_SYSMENU = 0x00080000
+WS_THICKFRAME = 0x00040000
+WS_MINIMIZEBOX = 0x00020000
+WS_MAXIMIZEBOX = 0x00010000
+FRAMELESS_SNAP_STYLE_MASK = (
+    WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+)
+
+SWP_NOSIZE = 0x0001
+SWP_NOMOVE = 0x0002
+SWP_NOZORDER = 0x0004
+SWP_NOACTIVATE = 0x0010
+SWP_FRAMECHANGED = 0x0020
+
+TITLE_BAR_HEIGHT = 40
+TITLE_BAR_DRAG_RIGHT_MARGIN = 322
+CAPTION_BUTTON_WIDTH = 46
+RESIZE_BORDER_WIDTH = 8
+
+
+@dataclass(frozen=True)
+class FramelessHitTestMetrics:
+    client_width: int
+    client_height: int
+    dpi_scale: float = 1.0
+    title_bar_height: int = TITLE_BAR_HEIGHT
+    drag_right_margin: int = TITLE_BAR_DRAG_RIGHT_MARGIN
+    caption_button_width: int = CAPTION_BUTTON_WIDTH
+    resize_border_width: int = RESIZE_BORDER_WIDTH
+
+
+def _scaled(value: int, scale: float) -> int:
+    return max(1, int(round(value * max(scale, 0.1))))
+
+
+def hit_test_client_point(x: int, y: int, metrics: FramelessHitTestMetrics) -> int:
+    """Map a client-area point to a Win32 hit-test code for the custom shell."""
+    width = int(metrics.client_width)
+    height = int(metrics.client_height)
+    scale = float(metrics.dpi_scale or 1.0)
+    border = _scaled(metrics.resize_border_width, scale)
+    title_height = _scaled(metrics.title_bar_height, scale)
+    button_width = _scaled(metrics.caption_button_width, scale)
+    drag_right_margin = _scaled(metrics.drag_right_margin, scale)
+
+    on_left = x < border
+    on_right = x >= width - border
+    on_top = y < border
+    on_bottom = y >= height - border
+
+    if on_top and on_left:
+        return HTTOPLEFT
+    if on_top and on_right:
+        return HTTOPRIGHT
+    if on_bottom and on_left:
+        return HTBOTTOMLEFT
+    if on_bottom and on_right:
+        return HTBOTTOMRIGHT
+    if on_left:
+        return HTLEFT
+    if on_right:
+        return HTRIGHT
+    if on_top:
+        return HTTOP
+    if on_bottom:
+        return HTBOTTOM
+
+    if y < title_height:
+        max_left = width - button_width * 2
+        max_right = width - button_width
+        drag_right = max(0, width - drag_right_margin)
+        if max_left <= x < max_right:
+            return HTMAXBUTTON
+        if x < drag_right:
+            return HTCAPTION
+
+    return HTCLIENT
+
+
+_snap_subclasses: dict[int, tuple[object, int]] = {}
+
+
+if sys.platform == "win32" and user32:
+    LRESULT = ctypes.c_ssize_t
+    WNDPROC = ctypes.WINFUNCTYPE(
+        LRESULT,
+        wintypes.HWND,
+        wintypes.UINT,
+        wintypes.WPARAM,
+        wintypes.LPARAM,
+    )
+
+    _GetWindowLongPtr = (
+        user32.GetWindowLongPtrW
+        if ctypes.sizeof(ctypes.c_void_p) == 8
+        else user32.GetWindowLongW
+    )
+    _SetWindowLongPtr = (
+        user32.SetWindowLongPtrW
+        if ctypes.sizeof(ctypes.c_void_p) == 8
+        else user32.SetWindowLongW
+    )
+    _GetWindowLongPtr.restype = ctypes.c_ssize_t
+    _GetWindowLongPtr.argtypes = [wintypes.HWND, ctypes.c_int]
+    _SetWindowLongPtr.restype = ctypes.c_ssize_t
+    _SetWindowLongPtr.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+    user32.CallWindowProcW.restype = LRESULT
+    user32.CallWindowProcW.argtypes = [
+        ctypes.c_void_p,
+        wintypes.HWND,
+        wintypes.UINT,
+        wintypes.WPARAM,
+        wintypes.LPARAM,
+    ]
+    user32.GetClientRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.ScreenToClient.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)]
+    user32.SetWindowPos.argtypes = [
+        wintypes.HWND,
+        wintypes.HWND,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_uint,
+    ]
+    if hasattr(user32, "GetDpiForWindow"):
+        user32.GetDpiForWindow.argtypes = [wintypes.HWND]
+        user32.GetDpiForWindow.restype = ctypes.c_uint
+    if dwmapi and hasattr(dwmapi, "DwmDefWindowProc"):
+        dwmapi.DwmDefWindowProc.argtypes = [
+            wintypes.HWND,
+            wintypes.UINT,
+            wintypes.WPARAM,
+            wintypes.LPARAM,
+            ctypes.POINTER(LRESULT),
+        ]
+        dwmapi.DwmDefWindowProc.restype = wintypes.BOOL
+else:
+    WNDPROC = None
 
 # DWM Window Attributes
 DWMWA_USE_IMMERSIVE_DARK_MODE = 20
@@ -206,3 +366,118 @@ def apply_window_backdrop(hwnd_val: int, is_dark: bool, enabled: bool = True, op
 def apply_acrylic_effect(hwnd_val: int, is_dark: bool) -> bool:
     """Backward-compatible wrapper for existing callers."""
     return apply_window_backdrop(hwnd_val, is_dark, True, 72)
+
+
+def _window_dpi_scale(hwnd_val: int) -> float:
+    if not user32 or not hasattr(user32, "GetDpiForWindow"):
+        return 1.0
+    try:
+        dpi = user32.GetDpiForWindow(wintypes.HWND(hwnd_val))
+        return max(1.0, dpi / 96.0)
+    except Exception:
+        return 1.0
+
+
+def _client_metrics(hwnd_val: int) -> FramelessHitTestMetrics | None:
+    if not user32:
+        return None
+    rect = wintypes.RECT()
+    if not user32.GetClientRect(wintypes.HWND(hwnd_val), ctypes.byref(rect)):
+        return None
+    return FramelessHitTestMetrics(
+        client_width=rect.right - rect.left,
+        client_height=rect.bottom - rect.top,
+        dpi_scale=_window_dpi_scale(hwnd_val),
+    )
+
+
+def _screen_point_from_lparam(lparam: int) -> tuple[int, int]:
+    x = ctypes.c_short(lparam & 0xFFFF).value
+    y = ctypes.c_short((lparam >> 16) & 0xFFFF).value
+    return x, y
+
+
+def _hit_test_lparam(hwnd_val: int, lparam: int) -> int:
+    metrics = _client_metrics(hwnd_val)
+    if metrics is None:
+        return HTCLIENT
+
+    x, y = _screen_point_from_lparam(int(lparam))
+    point = wintypes.POINT(x, y)
+    if not user32.ScreenToClient(wintypes.HWND(hwnd_val), ctypes.byref(point)):
+        return HTCLIENT
+    return hit_test_client_point(point.x, point.y, metrics)
+
+
+def _enable_frameless_snap_styles(hwnd_val: int) -> None:
+    if not user32:
+        return
+    hwnd = wintypes.HWND(hwnd_val)
+    style = _GetWindowLongPtr(hwnd, GWL_STYLE)
+    if not style:
+        return
+    new_style = (style | FRAMELESS_SNAP_STYLE_MASK) & ~WS_CAPTION
+    if new_style == style:
+        return
+    _SetWindowLongPtr(hwnd, GWL_STYLE, new_style)
+    user32.SetWindowPos(
+        hwnd,
+        None,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+    )
+
+
+def install_frameless_window_hit_test(hwnd_val: int) -> bool:
+    """Install a Win32 hit-test bridge for the QML frameless title bar."""
+    if sys.platform != "win32" or not user32 or not WNDPROC:
+        return False
+    if not hwnd_val:
+        return False
+
+    hwnd_int = int(hwnd_val)
+    if hwnd_int in _snap_subclasses:
+        return True
+
+    _enable_frameless_snap_styles(hwnd_int)
+    previous_proc = _GetWindowLongPtr(wintypes.HWND(hwnd_int), GWLP_WNDPROC)
+    if not previous_proc:
+        return False
+
+    def wnd_proc(hwnd, msg, wparam, lparam):
+        if msg == WM_NCHITTEST:
+            dwm_result = LRESULT(0)
+            try:
+                if (
+                    dwmapi
+                    and hasattr(dwmapi, "DwmDefWindowProc")
+                    and dwmapi.DwmDefWindowProc(hwnd, msg, wparam, lparam, ctypes.byref(dwm_result))
+                    and dwm_result.value != HTCLIENT
+                ):
+                    return dwm_result.value
+            except Exception:
+                pass
+            return _hit_test_lparam(int(hwnd), int(lparam))
+
+        return user32.CallWindowProcW(
+            ctypes.c_void_p(previous_proc),
+            hwnd,
+            msg,
+            wparam,
+            lparam,
+        )
+
+    callback = WNDPROC(wnd_proc)
+    installed_previous = _SetWindowLongPtr(
+        wintypes.HWND(hwnd_int),
+        GWLP_WNDPROC,
+        ctypes.cast(callback, ctypes.c_void_p).value,
+    )
+    if not installed_previous:
+        return False
+
+    _snap_subclasses[hwnd_int] = (callback, installed_previous)
+    return True
