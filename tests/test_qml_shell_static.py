@@ -27,29 +27,32 @@ def test_main_window_exposes_snap_and_fullscreen_contract():
     qml = read_qml("qml/main.qml")
 
     for token in (
-        "property string snapPreviewMode",
-        "function beginTitleBarDrag",
-        "function updateTitleBarDrag",
-        "function finishTitleBarDrag",
-        "function showSnapPreview",
         "function applySnapMode",
+        "function centerAndRestore",
         "function toggleFullScreenPreview",
         "function enterFullScreenPreview",
-        "WindowTransparentForInput",
         "Shortcut",
         "F11",
         "Esc",
     ):
         assert token in qml
 
+    for unsafe_token in (
+        "property string snapPreviewMode",
+        "function beginTitleBarDrag",
+        "function updateTitleBarDrag",
+        "function finishTitleBarDrag",
+        "WindowTransparentForInput",
+        "snapPreviewWindow",
+    ):
+        assert unsafe_token not in qml
+
 
 def test_titlebar_exposes_window_layout_controls():
     title_bar = read_qml("qml/components/WxTitleBar.qml")
 
     for token in (
-        "beginTitleBarDrag",
-        "updateTitleBarDrag",
-        "finishTitleBarDrag",
+        "startSystemMove",
         "layoutMenu",
         "applySnapMode(\"left\")",
         "applySnapMode(\"right\")",
@@ -57,6 +60,14 @@ def test_titlebar_exposes_window_layout_controls():
         "enterFullScreenPreview",
     ):
         assert token in title_bar
+
+    for unsafe_token in (
+        "DragHandler",
+        "beginTitleBarDrag",
+        "updateTitleBarDrag",
+        "finishTitleBarDrag",
+    ):
+        assert unsafe_token not in title_bar
 
 
 def test_theme_toggle_moves_out_of_tab_bar():

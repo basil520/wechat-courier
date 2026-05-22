@@ -57,37 +57,18 @@ Rectangle {
         color: WxTheme.clGlassDivider
     }
 
-    // System Window Move Handler (custom drag keeps snap preview available)
-    Item {
-        id: dragZone
+    // System Window Move Handler (native move keeps Windows snap previews stable)
+    MouseArea {
         anchors.fill: parent
         anchors.rightMargin: 322 // Leave space for visual controls and window controls
 
-        TapHandler {
-            acceptedButtons: Qt.LeftButton
-            onDoubleTapped: root.toggleMaximized()
-        }
-
-        DragHandler {
-            id: titleDragHandler
-            target: null
-            acceptedButtons: Qt.LeftButton
-
-            onActiveChanged: {
-                if (!root.window) return
-                if (active) {
-                    root.window.beginTitleBarDrag(centroid.position.x, centroid.position.y)
-                } else {
-                    root.window.finishTitleBarDrag()
-                }
-            }
-
-            onTranslationChanged: {
-                if (active && root.window) {
-                    root.window.updateTitleBarDrag(translation.x, translation.y)
-                }
+        onPressed: {
+            if (root.window && root.window.visibility !== Window.FullScreen) {
+                root.window.startSystemMove()
             }
         }
+
+        onDoubleClicked: root.toggleMaximized()
     }
 
     RowLayout {
