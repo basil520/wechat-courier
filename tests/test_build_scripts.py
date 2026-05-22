@@ -1,0 +1,195 @@
+# -*- coding: utf-8 -*-
+"""Build script regression tests."""
+
+import importlib.util
+import dis
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_build_module():
+    spec = importlib.util.spec_from_file_location("wxauto_build", ROOT / "build" / "build.py")
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_build_filters_module():
+    spec = importlib.util.spec_from_file_location(
+        "wxauto_pyinstaller_filters",
+        ROOT / "build" / "pyinstaller_filters.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_build_script_does_not_call_missing_parent_comtypes_pregen(monkeypatch):
+    build = load_build_module()
+    calls = []
+
+    def fake_run(cmd, cwd=None, check=False):
+        calls.append((list(cmd), Path(cwd) if cwd else None, check))
+
+    monkeypatch.setattr(build, "_ensure_pyinstaller_available", lambda: None)
+    monkeypatch.setattr(build.subprocess, "run", fake_run)
+
+    build.main()
+
+    assert calls
+    assert calls[0][0][:3] == [build.sys.executable, "-m", "PyInstaller"]
+    assert calls[0][1] == ROOT
+    assert str(ROOT / "build" / "build.spec") in calls[0][0]
+    assert "--name=五阿哥群发助手" not in calls[0][0]
+    assert "--windowed" not in calls[0][0]
+    assert not any(str(ROOT.parent / "pregen_comtypes.py") in part for cmd, _, _ in calls for part in cmd)
+
+
+def test_build_spec_uses_repository_root_for_sources_and_hooks():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert "os.path.dirname(os.path.dirname(SPECPATH))" not in spec_text
+    assert "ROOT = os.path.dirname(SPECPATH)" in spec_text
+    assert "PROJECT_ROOT = os.path.dirname(ROOT)" not in spec_text
+    assert 'os.path.join(ROOT, "src")' in spec_text
+    assert 'pathex=[ROOT]' in spec_text
+    assert 'os.path.join(ROOT, "build", "_comtypes_hook.py")' in spec_text
+
+
+def test_build_spec_does_not_hardcode_python_312_pywin32_dlls():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert "pywintypes312.dll" not in spec_text
+    assert "pythoncom312.dll" not in spec_text
+    assert "sys.version_info" in spec_text
+
+
+def test_build_spec_includes_qml_svg_assets():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert '".svg"' in spec_text
+
+
+def test_build_spec_includes_qml_singleton_metadata():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert (ROOT / "qml" / "theme" / "qmldir").exists()
+    assert '"qmldir"' in spec_text
+
+
+def test_build_spec_does_not_force_bs4_hidden_import():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+    markdown_utils = (ROOT / "src" / "utils" / "markdown_utils.py").read_text(encoding="utf-8")
+
+    assert '"bs4"' not in spec_text
+    assert "from bs4" not in markdown_utils
+    assert "BeautifulSoup" not in markdown_utils
+
+
+def test_build_spec_does_not_force_missing_hidden_imports():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert "PySide6.QtQuickTemplates2" not in spec_text
+    assert "comtypes.server.local" not in spec_text
+
+
+def test_build_spec_uses_qt_artifact_pruning():
+    spec_text = (ROOT / "build" / "build.spec").read_text(encoding="utf-8")
+
+    assert "filter_qt_artifacts" in spec_text
+    assert "a.binaries = filter_qt_artifacts(a.binaries)" in spec_text
+    assert "a.datas = filter_qt_artifacts(a.datas)" in spec_text
+
+
+def test_qt_artifact_pruning_removes_unused_large_modules():
+    filters = load_build_filters_module()
+    toc = [
+        ("PySide6/Qt6WebEngineCore.dll", "source", "BINARY"),
+        ("PySide6/Qt6Quick3D.dll", "source", "BINARY"),
+        ("PySide6/qml/QtWebEngine/qtwebenginequickplugin.dll", "source", "BINARY"),
+        ("PySide6/qml/QtQuick/VirtualKeyboard/qtvkbplugin.dll", "source", "BINARY"),
+        ("PySide6/qml/QtQuick/Controls/FluentWinUI3/fluent.dll", "source", "BINARY"),
+        ("PySide6/qml/QtQuick/Controls/Basic/Basic.qml", "source", "DATA"),
+        ("PySide6/qml/QtQuick/Layouts/qmllayoutsplugin.dll", "source", "BINARY"),
+        ("PySide6/qml/Qt5Compat/GraphicalEffects/DropShadow.qml", "source", "DATA"),
+        ("PySide6/Qt6Quick.dll", "source", "BINARY"),
+        ("qml/theme/qmldir", "source", "DATA"),
+    ]
+
+    kept = filters.filter_qt_artifacts(toc)
+    kept_destinations = {entry[0] for entry in kept}
+
+    assert "PySide6/Qt6WebEngineCore.dll" not in kept_destinations
+    assert "PySide6/Qt6Quick3D.dll" not in kept_destinations
+    assert "PySide6/qml/QtWebEngine/qtwebenginequickplugin.dll" not in kept_destinations
+    assert "PySide6/qml/QtQuick/VirtualKeyboard/qtvkbplugin.dll" not in kept_destinations
+    assert "PySide6/qml/QtQuick/Controls/FluentWinUI3/fluent.dll" not in kept_destinations
+    assert "PySide6/qml/QtQuick/Controls/Basic/Basic.qml" in kept_destinations
+    assert "PySide6/qml/QtQuick/Layouts/qmllayoutsplugin.dll" in kept_destinations
+    assert "PySide6/qml/Qt5Compat/GraphicalEffects/DropShadow.qml" in kept_destinations
+    assert "PySide6/Qt6Quick.dll" in kept_destinations
+    assert "qml/theme/qmldir" in kept_destinations
+
+
+def test_desktop_demo_imports_wechat_client_without_src_barrel():
+    demo_text = (ROOT / "app" / "demo.py").read_text(encoding="utf-8")
+
+    assert "from src import WeChatClient" not in demo_text
+    assert "from src.client import WeChatClient" in demo_text
+
+
+def _iter_code_objects(code):
+    yield code
+    for const in code.co_consts:
+        if hasattr(const, "co_code"):
+            yield from _iter_code_objects(const)
+
+
+def test_uiautomation_module_is_recursively_disassemblable_for_pyinstaller():
+    code = compile(
+        (ROOT / "src" / "core" / "uiautomation.py").read_text(encoding="utf-8"),
+        str(ROOT / "src" / "core" / "uiautomation.py"),
+        "exec",
+    )
+
+    for code_object in _iter_code_objects(code):
+        list(dis.get_instructions(code_object))
+
+
+def test_build_script_reports_missing_pyinstaller(monkeypatch):
+    build = load_build_module()
+
+    monkeypatch.setattr(build.importlib.util, "find_spec", lambda name: None)
+
+    with pytest.raises(RuntimeError, match="PyInstaller"):
+        build._ensure_pyinstaller_available()
+
+
+def test_pyinstaller_is_declared_as_build_dependency():
+    requirements = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8").lower()
+
+    assert "pyinstaller" in requirements
+
+
+def test_build_cli_reports_missing_pyinstaller_without_traceback():
+    if importlib.util.find_spec("PyInstaller") is not None:
+        pytest.skip("PyInstaller is installed in this environment")
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "build" / "build.py")],
+        cwd=ROOT,
+        capture_output=True,
+    )
+    output = (result.stdout + result.stderr).decode("gbk", errors="replace")
+
+    assert result.returncode == 1
+    assert "未安装 PyInstaller" in output
+    assert "Traceback" not in output

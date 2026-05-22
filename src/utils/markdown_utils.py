@@ -1,8 +1,83 @@
 # -*- coding: utf-8 -*-
 """微信公告 Markdown 与剪贴板工具"""
+from html.parser import HTMLParser
+
 import markdown
 import win32clipboard
-from bs4 import BeautifulSoup
+
+
+class _HTMLTextExtractor(HTMLParser):
+    _SEPARATOR_TAGS = {
+        "address",
+        "article",
+        "aside",
+        "blockquote",
+        "br",
+        "dd",
+        "div",
+        "dl",
+        "dt",
+        "figcaption",
+        "figure",
+        "footer",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "hr",
+        "li",
+        "main",
+        "nav",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "tbody",
+        "td",
+        "tfoot",
+        "th",
+        "thead",
+        "tr",
+        "ul",
+    }
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._parts = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() in self._SEPARATOR_TAGS:
+            self._append_separator()
+
+    def handle_endtag(self, tag):
+        if tag.lower() in self._SEPARATOR_TAGS:
+            self._append_separator()
+
+    def handle_data(self, data):
+        text = data.strip()
+        if not text:
+            return
+        if self._parts and self._parts[-1] != "\n":
+            self._parts.append("\n")
+        self._parts.append(text)
+
+    def get_text(self):
+        return "".join(self._parts).strip()
+
+    def _append_separator(self):
+        if self._parts and self._parts[-1] != "\n":
+            self._parts.append("\n")
+
+
+def _html_to_plain_text(html: str) -> str:
+    parser = _HTMLTextExtractor()
+    parser.feed(html)
+    parser.close()
+    return parser.get_text()
 
 
 def markdown_to_html(md_content: str) -> str:
@@ -119,8 +194,7 @@ def copy_html_to_clipboard(html: str) -> bool:
         win32clipboard.SetClipboardData(cf_html_format, cf_html)
 
         # 同时设置纯文本作为备用
-        soup = BeautifulSoup(html, 'html.parser')
-        plain_text = soup.get_text(separator='\n')
+        plain_text = _html_to_plain_text(html)
         win32clipboard.SetClipboardData(win32clipboard.CF_UNICODETEXT, plain_text)
 
         return True

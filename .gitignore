@@ -3,6 +3,11 @@ __pycache__/
 *.pyo
 .pytest_cache/
 .claude/
+.idea/
+.venv/
+venv/
+env/
+/build/build/
 
 *.log
 *.jsonl
@@ -11,3 +16,4 @@ EOF
 
 docs/
 scratch/
+/dist/

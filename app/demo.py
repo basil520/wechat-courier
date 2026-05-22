@@ -40,7 +40,7 @@ class MockWeChatClient:
 
 
 try:
-    from src import WeChatClient  # noqa: F401
+    from src.client import WeChatClient  # noqa: F401
 except Exception:
     _DEMO_MODE = True
     WeChatClient = MockWeChatClient  # type: ignore

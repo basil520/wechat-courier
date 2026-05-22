@@ -37,6 +37,7 @@ MAX_PATH = 260
 DEBUG_SEARCH_TIME = False
 DEBUG_EXIST_DISAPPEAR = False
 S_OK = 0
+MAX_SEARCH_DEPTH = 0xFFFFFFFF
 
 IsNT6orHigher = os.sys.getwindowsversion().major >= 6
 ProcessTime = time.perf_counter  #this returns nearly 0 when first call it if python version <= 3.6
@@ -5266,7 +5267,7 @@ def CreatePattern(patternId: int, pattern: ctypes.POINTER(comtypes.IUnknown)):
 
 class Control():
     ValidKeys = set(['ControlType', 'ClassName', 'AutomationId', 'Name', 'SubName', 'RegexName', 'Depth', 'Compare'])
-    def __init__(self, searchFromControl: 'Control' = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: 'Control' = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         """
         searchFromControl: `Control` or its subclass, if it is None, search from root control(Desktop).
         searchDepth: int, max search depth from searchFromControl.
@@ -6401,138 +6402,138 @@ class Control():
                     topHandle = GetAncestor(handle, GAFlag.Root)
                     return ControlFromHandle(topHandle)
 
-    def Control(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'Control':
+    def Control(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'Control':
         return Control(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ButtonControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ButtonControl':
+    def ButtonControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ButtonControl':
         return ButtonControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def CalendarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CalendarControl':
+    def CalendarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CalendarControl':
         return CalendarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def CheckBoxControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CheckBoxControl':
+    def CheckBoxControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CheckBoxControl':
         return CheckBoxControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ComboBoxControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ComboBoxControl':
+    def ComboBoxControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ComboBoxControl':
         return ComboBoxControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def CustomControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CustomControl':
+    def CustomControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'CustomControl':
         return CustomControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def DataGridControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DataGridControl':
+    def DataGridControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DataGridControl':
         return DataGridControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def DataItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DataItemControl':
+    def DataItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DataItemControl':
         return DataItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def DocumentControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DocumentControl':
+    def DocumentControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'DocumentControl':
         return DocumentControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def EditControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'EditControl':
+    def EditControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'EditControl':
         return EditControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def GroupControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'GroupControl':
+    def GroupControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'GroupControl':
         return GroupControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def HeaderControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HeaderControl':
+    def HeaderControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HeaderControl':
         return HeaderControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def HeaderItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HeaderItemControl':
+    def HeaderItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HeaderItemControl':
         return HeaderItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def HyperlinkControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HyperlinkControl':
+    def HyperlinkControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'HyperlinkControl':
         return HyperlinkControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ImageControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ImageControl':
+    def ImageControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ImageControl':
         return ImageControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ListControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'listControl':
+    def ListControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'listControl':
         return ListControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ListItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ListItemControl':
+    def ListItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ListItemControl':
         return ListItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def MenuControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuControl':
+    def MenuControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuControl':
         return MenuControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def MenuBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuBarControl':
+    def MenuBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuBarControl':
         return MenuBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def MenuItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuItemControl':
+    def MenuItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'MenuItemControl':
         return MenuItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def PaneControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'PaneControl':
+    def PaneControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'PaneControl':
         return PaneControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ProgressBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ProgressBarControl':
+    def ProgressBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ProgressBarControl':
         return ProgressBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def RadioButtonControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'RadioButtonControl':
+    def RadioButtonControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'RadioButtonControl':
         return RadioButtonControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ScrollBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ScrollBarControl':
+    def ScrollBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ScrollBarControl':
         return ScrollBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def SemanticZoomControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SemanticZoomControl':
+    def SemanticZoomControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SemanticZoomControl':
         return SemanticZoomControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def SeparatorControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SeparatorControl':
+    def SeparatorControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SeparatorControl':
         return SeparatorControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def SliderControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SliderControl':
+    def SliderControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SliderControl':
         return SliderControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def SpinnerControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SpinnerControl':
+    def SpinnerControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SpinnerControl':
         return SpinnerControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def SplitButtonControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SplitButtonControl':
+    def SplitButtonControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'SplitButtonControl':
         return SplitButtonControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def StatusBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'StatusBarControl':
+    def StatusBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'StatusBarControl':
         return StatusBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TabControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TabControl':
+    def TabControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TabControl':
         return TabControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TabItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TabItemControl':
+    def TabItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TabItemControl':
         return TabItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TableControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TableControl':
+    def TableControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TableControl':
         return TableControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TextControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TextControl':
+    def TextControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TextControl':
         return TextControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ThumbControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ThumbControl':
+    def ThumbControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ThumbControl':
         return ThumbControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TitleBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TitleBarControl':
+    def TitleBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TitleBarControl':
         return TitleBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ToolBarControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ToolBarControl':
+    def ToolBarControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ToolBarControl':
         return ToolBarControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def ToolTipControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ToolTipControl':
+    def ToolTipControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'ToolTipControl':
         return ToolTipControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TreeControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TreeControl':
+    def TreeControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TreeControl':
         return TreeControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def TreeItemControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TreeItemControl':
+    def TreeItemControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'TreeItemControl':
         return TreeItemControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
-    def WindowControl(self, searchDepth=0xFFFFFFFF, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'WindowControl':
+    def WindowControl(self, searchDepth=MAX_SEARCH_DEPTH, searchInterval=SEARCH_INTERVAL, foundIndex=1, element=0, **searchProperties) -> 'WindowControl':
         return WindowControl(searchDepth=searchDepth, searchInterval=searchInterval, foundIndex=foundIndex, element=element, searchFromControl=self, **searchProperties)
 
 
 class AppBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.AppBarControl)
 
 
 class ButtonControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ButtonControl)
 
@@ -6556,7 +6557,7 @@ class ButtonControl(Control):
 
 
 class CalendarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.CalendarControl)
 
@@ -6586,7 +6587,7 @@ class CalendarControl(Control):
 
 
 class CheckBoxControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.CheckBoxControl)
 
@@ -6598,7 +6599,7 @@ class CheckBoxControl(Control):
 
 
 class ComboBoxControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ComboBoxControl)
 
@@ -6672,13 +6673,13 @@ class ComboBoxControl(Control):
 
 
 class CustomControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.CustomControl)
 
 
 class DataGridControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.DataGridControl)
 
@@ -6708,7 +6709,7 @@ class DataGridControl(Control):
 
 
 class DataItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.DataItemControl)
 
@@ -6756,7 +6757,7 @@ class DataItemControl(Control):
 
 
 class DocumentControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.DocumentControl)
 
@@ -6780,7 +6781,7 @@ class DocumentControl(Control):
 
 
 class EditControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.EditControl)
 
@@ -6804,7 +6805,7 @@ class EditControl(Control):
 
 
 class GroupControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.GroupControl)
 
@@ -6816,7 +6817,7 @@ class GroupControl(Control):
 
 
 class HeaderControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.HeaderControl)
 
@@ -6828,7 +6829,7 @@ class HeaderControl(Control):
 
 
 class HeaderItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.HeaderItemControl)
 
@@ -6846,7 +6847,7 @@ class HeaderItemControl(Control):
 
 
 class HyperlinkControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.HyperlinkControl)
 
@@ -6864,7 +6865,7 @@ class HyperlinkControl(Control):
 
 
 class ImageControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ImageControl)
 
@@ -6882,7 +6883,7 @@ class ImageControl(Control):
 
 
 class ListControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ListControl)
 
@@ -6912,7 +6913,7 @@ class ListControl(Control):
 
 
 class ListItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ListItemControl)
 
@@ -6960,13 +6961,13 @@ class ListItemControl(Control):
 
 
 class MenuControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.MenuControl)
 
 
 class MenuBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.MenuBarControl)
 
@@ -6990,7 +6991,7 @@ class MenuBarControl(Control):
 
 
 class MenuItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.MenuItemControl)
 
@@ -7104,7 +7105,7 @@ class TopLevel():
 
 
 class PaneControl(Control, TopLevel):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.PaneControl)
 
@@ -7128,7 +7129,7 @@ class PaneControl(Control, TopLevel):
 
 
 class ProgressBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ProgressBarControl)
 
@@ -7146,7 +7147,7 @@ class ProgressBarControl(Control):
 
 
 class RadioButtonControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.RadioButtonControl)
 
@@ -7158,7 +7159,7 @@ class RadioButtonControl(Control):
 
 
 class ScrollBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ScrollBarControl)
 
@@ -7170,19 +7171,19 @@ class ScrollBarControl(Control):
 
 
 class SemanticZoomControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.SemanticZoomControl)
 
 
 class SeparatorControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.SeparatorControl)
 
 
 class SliderControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.SliderControl)
 
@@ -7206,7 +7207,7 @@ class SliderControl(Control):
 
 
 class SpinnerControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.SpinnerControl)
 
@@ -7230,7 +7231,7 @@ class SpinnerControl(Control):
 
 
 class SplitButtonControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.SplitButtonControl)
 
@@ -7248,7 +7249,7 @@ class SplitButtonControl(Control):
 
 
 class StatusBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.StatusBarControl)
 
@@ -7260,7 +7261,7 @@ class StatusBarControl(Control):
 
 
 class TabControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TabControl)
 
@@ -7278,7 +7279,7 @@ class TabControl(Control):
 
 
 class TabItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TabItemControl)
 
@@ -7290,7 +7291,7 @@ class TabItemControl(Control):
 
 
 class TableControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TableControl)
 
@@ -7320,7 +7321,7 @@ class TableControl(Control):
 
 
 class TextControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TextControl)
 
@@ -7344,7 +7345,7 @@ class TextControl(Control):
 
 
 class ThumbControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ThumbControl)
 
@@ -7356,13 +7357,13 @@ class ThumbControl(Control):
 
 
 class TitleBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TitleBarControl)
 
 
 class ToolBarControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ToolBarControl)
 
@@ -7386,7 +7387,7 @@ class ToolBarControl(Control):
 
 
 class ToolTipControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.ToolTipControl)
 
@@ -7404,7 +7405,7 @@ class ToolTipControl(Control):
 
 
 class TreeControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TreeControl)
 
@@ -7422,7 +7423,7 @@ class TreeControl(Control):
 
 
 class TreeItemControl(Control):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.TreeItemControl)
 
@@ -7458,7 +7459,7 @@ class TreeItemControl(Control):
 
 
 class WindowControl(Control, TopLevel):
-    def __init__(self, searchFromControl: Control = None, searchDepth: int = 0xFFFFFFFF, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
+    def __init__(self, searchFromControl: Control = None, searchDepth: int = MAX_SEARCH_DEPTH, searchInterval: float = SEARCH_INTERVAL, foundIndex: int = 1, element=None, **searchProperties):
         Control.__init__(self, searchFromControl, searchDepth, searchInterval, foundIndex, element, **searchProperties)
         self.AddSearchProperties(ControlType=ControlType.WindowControl)
         self._DockPattern = None
@@ -7608,7 +7609,7 @@ def WaitForDisappear(control: Control, timeout: float) -> bool:
 
 def WalkTree(top, getChildren: Callable[[TreeNode], List[TreeNode]] = None,
              getFirstChild: Callable[[TreeNode], TreeNode] = None, getNextSibling: Callable[[TreeNode], TreeNode] = None,
-             yieldCondition: Callable[[TreeNode, int], bool] = None, includeTop: bool = False, maxDepth: int = 0xFFFFFFFF):
+             yieldCondition: Callable[[TreeNode, int], bool] = None, includeTop: bool = False, maxDepth: int = MAX_SEARCH_DEPTH):
     """
     Walk a tree not using recursive algorithm.
     top: a tree node.
@@ -7767,7 +7768,7 @@ def ControlsAreSame(control1: Control, control2: Control) -> bool:
     return bool(_AutomationClient.instance().IUIAutomation.CompareElements(control1.Element, control2.Element))
 
 
-def WalkControl(control: Control, includeTop: bool = False, maxDepth: int = 0xFFFFFFFF):
+def WalkControl(control: Control, includeTop: bool = False, maxDepth: int = MAX_SEARCH_DEPTH):
     """
     control: `Control` or its subclass.
     includeTop: bool, if True, yield (control, 0) first.
@@ -7872,7 +7873,7 @@ def LogControl(control: Control, depth: int = 0, showAllName: bool = True, showP
     Logger.Write('\n')
 
 
-def EnumAndLogControl(control: Control, maxDepth: int = 0xFFFFFFFF, showAllName: bool = True, showPid: bool = False, startDepth: int = 0) -> None:
+def EnumAndLogControl(control: Control, maxDepth: int = MAX_SEARCH_DEPTH, showAllName: bool = True, showPid: bool = False, startDepth: int = 0) -> None:
     """
     Print and log control and its descendants' propertyies.
     control: `Control` or its subclass.
@@ -7898,7 +7899,7 @@ def EnumAndLogControlAncestors(control: Control, showAllName: bool = True, showP
         LogControl(control, i, showAllName, showPid)
 
 
-def FindControl(control: Control, compare: Callable[[Control, int], bool], maxDepth: int = 0xFFFFFFFF, findFromSelf: bool = False, foundIndex: int = 1) -> Control:
+def FindControl(control: Control, compare: Callable[[Control, int], bool], maxDepth: int = MAX_SEARCH_DEPTH, findFromSelf: bool = False, foundIndex: int = 1) -> Control:
     """
     control: `Control` or its subclass.
     compare: Callable[[Control, int], bool], function(control: Control, depth: int) -> bool.
@@ -8151,3 +8152,4 @@ if __name__ == '__main__':
 
     hello = '{Ctrl}{End}{Enter}Hello World! 你好世界！'
     SendKeys(hello)
+
