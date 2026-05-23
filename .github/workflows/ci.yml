@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: "3.10"
+  PRODUCT_NAME: "五阿哥群发助手"
+
+jobs:
+  # ── Test ──
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Pregenerate comtypes wrappers
+        run: python build/pregen_comtypes.py
+
+      - name: Run tests
+        run: pytest -v --timeout=30 -m "not slow and not qml"
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+  # ── Build ──
+  build:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Pregenerate comtypes wrappers
+        run: python build/pregen_comtypes.py
+
+      - name: Build with PyInstaller
+        run: python -m PyInstaller --noconfirm --clean build/build.spec
+
+      - name: Read version from _version.py
+        id: version
+        shell: python
+        run: |
+          import re, os
+          text = open("src/_version.py", encoding="utf-8").read()
+          m = re.search(r'__version__\s*=\s*"([^"]+)"', text)
+          ver = m.group(1) if m else "0.0.0"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"version={ver}\n")
+
+      - name: Patch NSIS script version
+        shell: python
+        run: |
+          import re
+          ver = "${{ steps.version.outputs.version }}"
+          nsi = "installer/setup.nsi"
+          text = open(nsi, encoding="utf-8").read()
+          text = re.sub(
+            r'!define PRODUCT_VERSION "[^"]*"',
+            f'!define PRODUCT_VERSION "{ver}"',
+            text,
+          )
+          open(nsi, "w", encoding="utf-8").write(text)
+
+      - name: Install NSIS
+        run: choco install nsis --yes --no-progress
+
+      - name: Build NSIS installer
+        run: makensis installer/setup.nsi
+
+      - name: Create zip archive
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/$env:PRODUCT_NAME" `
+            -DestinationPath "dist/$env:PRODUCT_NAME_${{ steps.version.outputs.version }}.zip"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ steps.version.outputs.version }}
+          path: |
+            dist/${{ env.PRODUCT_NAME }}_${{ steps.version.outputs.version }}.zip
+            dist/${{ env.PRODUCT_NAME }}_Setup.exe
+          retention-days: 7
+
+  # ── Release ──
+  release:
+    runs-on: windows-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        shell: bash
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            dist/*_Setup.exe \
+            dist/*.zip \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes "Release v${{ steps.version.outputs.version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
