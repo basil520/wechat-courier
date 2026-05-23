@@ -12,7 +12,7 @@ from app.demo import is_demo_mode
 from app import win32_helper
 
 try:
-    from src._version import __version__
+    from app._version import __version__
 except Exception:
     __version__ = "0.0.0"
 

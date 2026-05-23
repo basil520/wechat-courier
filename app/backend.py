@@ -54,7 +54,7 @@ class BackendController(QObject):
 
     def __init__(
         self,
-        version: str = "0.2.1",
+        version: str = "0.1.0",
         parent=None,
         settings: QSettings | None = None,
         worker_factory=None,

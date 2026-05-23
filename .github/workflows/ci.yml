@@ -65,7 +65,7 @@ jobs:
         shell: python
         run: |
           import re, os
-          text = open("src/_version.py", encoding="utf-8").read()
+          text = open("app/_version.py", encoding="utf-8").read()
           m = re.search(r'__version__\s*=\s*"([^"]+)"', text)
           ver = m.group(1) if m else "0.0.0"
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
