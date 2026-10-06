@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -32,10 +33,29 @@ def _pattern(control: Any, getter_name: str):
         return None
 
 
-def _call_pattern(pattern: Any, method_name: str, *args) -> bool:
+def _call_pattern(
+    pattern: Any, method_name: str, *args, retry_signature: bool = True
+) -> bool:
     check_action_deadline()
     method = getattr(pattern, method_name)
     check_action_deadline()
+    if not retry_signature:
+        # Select must not be replayed after a TypeError inside the provider.
+        kwargs = {"waitTime": 0}
+        try:
+            signature = inspect.signature(method)
+        except (TypeError, ValueError):
+            pass
+        else:
+            try:
+                signature.bind(*args, **kwargs)
+            except TypeError:
+                signature.bind(*args)
+                kwargs = {}
+        check_action_deadline()
+        result = method(*args, **kwargs)
+        check_action_deadline()
+        return result is not False
     try:
         result = method(*args, waitTime=0)
     except TypeError:
@@ -112,6 +132,8 @@ class VerifiedActions:
         resolve_control: Callable[[], Any] | None = None,
         source_present: Callable[[], bool] | None = None,
         extra_postcondition: Callable[[], bool] | None = None,
+        allow_click_fallback: bool = True,
+        skip_if_verified: Callable[[], bool] | None = None,
         wake_event=None,
     ) -> ActionResult:
         check_action_deadline()
@@ -146,9 +168,14 @@ class VerifiedActions:
         pattern = _pattern(control, getter)
         pattern_attempted = False
         if pattern is not None:
+            if skip_if_verified is not None:
+                preserved = bool(skip_if_verified())
+                check_action_deadline()
+                if preserved:
+                    return ActionResult(f"{method_label}_preserved")
             pattern_attempted = True
             try:
-                invoked = _call_pattern(pattern, method)
+                invoked = _call_pattern(pattern, method, retry_signature=allow_click_fallback)
             except AutomationRetryError:
                 raise
             except Exception:
@@ -158,6 +185,12 @@ class VerifiedActions:
                 verified, self.timeout, wake_event=wake_event
             ):
                 return ActionResult(method_label)
+
+        if not allow_click_fallback:
+            raise ActionVerificationError(
+                f"action={method_label}; pattern unavailable or unverified; "
+                "click fallback disabled"
+            )
 
         if pattern_attempted and source_present is not None:
             try:
@@ -256,6 +289,8 @@ class VerifiedActions:
         resolve_control: Callable[[], Any] | None = None,
         source_present: Callable[[], bool] | None = None,
         extra_postcondition: Callable[[], bool] | None = None,
+        allow_click_fallback: bool = True,
+        skip_if_verified: Callable[[], bool] | None = None,
         wake_event=None,
     ) -> ActionResult:
         return self._activate(
@@ -268,6 +303,8 @@ class VerifiedActions:
             resolve_control=resolve_control,
             source_present=source_present,
             extra_postcondition=extra_postcondition,
+            allow_click_fallback=allow_click_fallback,
+            skip_if_verified=skip_if_verified,
             wake_event=wake_event,
         )
 

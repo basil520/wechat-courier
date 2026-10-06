@@ -40,6 +40,11 @@ INTERACTIVE_CONTROL_TYPES = {
     "TabItemControl",
 }
 FRIEND_REQUEST_TITLES = ("申请添加朋友", "发送添加朋友申请")
+FRIEND_PERMISSION_NAMES = ("朋友圈", "仅聊天")
+FRIEND_PERMISSION_CONTROL_TYPES = (
+    "RadioButtonControl", "ListItemControl", "ButtonControl", "CustomControl",
+)
+FRIEND_PERMISSION_QUERY_LIMIT = 128
 RISK_KEYWORDS = (
     "验证码",
     "操作频繁",
@@ -71,6 +76,12 @@ SEARCH_DESTINATION_TIMEOUT_SECONDS = 2.0
 
 class WindowBlockedError(AutomationRetryError):
     code = "WINDOW_BLOCKED"
+
+
+class FriendPermissionError(AutomationRetryError):
+    """A required friend permission cannot be safely selected or verified."""
+
+    code = "FRIEND_PERMISSION_UNVERIFIED"
 
 
 _STOP_ERRORS = (WeixinUnresponsiveError, WindowBlockedError, ActionDeadlineExceeded, EventCleanupError)
@@ -557,6 +568,7 @@ class NativeWeixinDriver:
         self._attachment_evidence = {}
         self._add_hwnd = 0
         self._verify_hwnd = 0
+        self._friend_permission_required = False
         self._friend_account = ""
         self._friend_profile_reset_for = ""
         self._friend_query_generation = 0
@@ -1623,6 +1635,7 @@ class NativeWeixinDriver:
         self._friend_profile_token = None
         self._add_hwnd = 0
         self._verify_hwnd = 0
+        self._friend_permission_required = False
 
     def soft_refresh_session(self) -> int:
         if self._session is None:
@@ -3702,6 +3715,7 @@ class NativeWeixinDriver:
         if len(verify_windows) != 1:
             raise RuntimeError("好友申请表单未唯一出现，拒绝继续")
         self._verify_hwnd = verify_windows[0]
+        self._friend_permission_required = False
         return bool(self._verify_hwnd)
 
     def set_friend_fields(
@@ -3729,14 +3743,14 @@ class NativeWeixinDriver:
             self._actions.set_text(
                 remark_edit, remark, wake_event=self._wake_event
             )
+        self._ensure_friend_permission()
         return {
             "greeting": self._actions.read_text(greeting_edit) or "",
             "remark": self._actions.read_text(remark_edit) or "",
         }
 
-    def _resolve_unique_friend_submit_control(self):
-        """Resolve the irreversible submit target from a fresh verified root."""
-
+    def _fresh_friend_request_root(self):
+        check_action_deadline()
         hwnd = int(self._verify_hwnd or 0)
         session = self._session
         if not hwnd or session is None or self._uia is None:
@@ -3748,17 +3762,9 @@ class NativeWeixinDriver:
         if not expected_pid or not expected_class:
             raise RuntimeError("好友申请窗口身份不完整，拒绝提交")
 
-        verify_windows = self._process_windows(
-            (expected_class,), visible=True, strict=True
-        )
-        if len(verify_windows) != 1 or int(verify_windows[0]) != hwnd:
-            raise RuntimeError(
-                "好友申请窗口未唯一保持可见，拒绝提交："
-                f"expectedHwnd={hwnd}, matches={verify_windows}"
-            )
-
         self.ensure_window_responsive(hwnd)
         root = self._uia.ControlFromHandle(hwnd)
+        check_action_deadline()
         root_class = str(safe_attr(root, "ClassName", "") or "")
         root_type = str(safe_attr(root, "ControlTypeName", "") or "")
         root_hwnd = int(safe_attr(root, "NativeWindowHandle", 0) or 0)
@@ -3779,8 +3785,159 @@ class NativeWeixinDriver:
             raise RuntimeError("好友申请窗口不可见，拒绝提交")
         if not bool(safe_attr(root, "IsEnabled", False)):
             raise RuntimeError("好友申请窗口未启用，拒绝提交")
+        return root
+
+    def _friend_permission_state(self, *, root=None):
+        """Read only visible permission labels and choices in the verified form."""
+
+        try:
+            check_action_deadline()
+            if self._query is None:
+                raise FriendPermissionError("好友权限局部查询接口不可用，已停止任务")
+            root = root if root is not None else self._fresh_friend_request_root()
+            hwnd = int(self._verify_hwnd)
+            self.ensure_window_responsive(hwnd)
+            controls = self._find_scoped_controls(
+                hwnd=hwnd, root=root,
+                enabled=False, visible=True,
+            )
+            check_action_deadline()
+            if len(controls) > FRIEND_PERMISSION_QUERY_LIMIT:
+                raise FriendPermissionError("好友权限区域超过安全查询上限，已停止任务")
+            named_controls = []
+            for control in controls:
+                check_action_deadline()
+                control_type = str(control.ControlTypeName)
+                check_action_deadline()
+                if control_type in {"EditControl", "DocumentControl"}:
+                    continue
+                name = str(control.Name).strip()
+                check_action_deadline()
+                named_controls.append((control, control_type, name))
+            names = [name for _control, _type, name in named_controls]
+            has_permission_hint = any(
+                "权限" in name and ("必填" in name or "需选择" in name or "需要选择" in name)
+                for name in names
+            )
+            if not has_permission_hint and not any(name in FRIEND_PERMISSION_NAMES for name in names):
+                if self._friend_permission_required:
+                    raise FriendPermissionError("必填好友权限区域已变化或不可读取，已停止任务")
+                return {}, None
+            self._friend_permission_required = True
+            choices = {}
+            selected = []
+            containers = []
+            for label in FRIEND_PERMISSION_NAMES:
+                matches = [control for control, control_type, name in named_controls
+                           if name == label and control_type != "TextControl"]
+                check_action_deadline()
+                if len(matches) != 1:
+                    raise FriendPermissionError("好友权限选项未唯一完整暴露到 UIA，已停止任务")
+                control = matches[0]
+                if str(control.ControlTypeName) not in FRIEND_PERMISSION_CONTROL_TYPES:
+                    raise FriendPermissionError("好友权限选项类型尚未适配，已停止任务")
+                check_action_deadline()
+                enabled = bool(control.IsEnabled)
+                check_action_deadline()
+                offscreen = bool(control.IsOffscreen)
+                check_action_deadline()
+                if not enabled or offscreen:
+                    raise FriendPermissionError("好友权限选项不可交互，已停止任务")
+                self.ensure_window_responsive(hwnd)
+                pattern = control.GetSelectionItemPattern()
+                check_action_deadline()
+                if pattern is None:
+                    raise FriendPermissionError("好友权限选项不支持 SelectionItemPattern，已停止任务")
+                is_selected = pattern.IsSelected
+                check_action_deadline()
+                if type(is_selected) is not bool:
+                    raise FriendPermissionError("好友权限选中状态无法核验，已停止任务")
+                # Standard Win32 radio buttons may not expose SelectionContainer.
+                container = getattr(pattern, "SelectionContainer", None)
+                check_action_deadline()
+                if container is None:
+                    container = control.GetParentControl()
+                    check_action_deadline()
+                container_id = _runtime_id(container)
+                check_action_deadline()
+                if not container_id:
+                    raise FriendPermissionError("好友权限所属分组无法核验，已停止任务")
+                containers.append(container_id)
+                choices[label] = control
+                if is_selected:
+                    selected.append(label)
+            if containers[0] != containers[1] or len(selected) > 1:
+                raise FriendPermissionError("好友权限分组或互斥状态异常，已停止任务")
+            return choices, selected[0] if selected else None
+        except _STOP_ERRORS:
+            raise
+        except FriendPermissionError:
+            raise
+        except Exception as exc:
+            check_action_deadline()
+            raise FriendPermissionError("好友权限控件或窗口已失效，无法安全核验，已停止任务") from exc
+
+    def _ensure_friend_permission(self, *, select_if_missing=True, root=None) -> None:
+        choices, selected = self._friend_permission_state(root=root)
+        if not choices or selected:
+            return
+        if not select_if_missing:
+            raise FriendPermissionError("提交前必填好友权限未选中，未点击确定，已停止任务")
+
+        # Discard the observation proxies before selecting, preserving a choice
+        # made between the observation and this final resolution.
+        choices, selected = self._friend_permission_state()
+        if selected:
+            return
+
+        choice_id = _runtime_id(choices["朋友圈"])
+
+        def preserve_existing_selection():
+            current, current_selection = self._friend_permission_state()
+            if current_selection:
+                return True
+            if not choice_id or _runtime_id(current["朋友圈"]) != choice_id:
+                raise FriendPermissionError("好友权限控件在选择前发生变化，已停止任务")
+            return False
+
+        def moments_selected():
+            current, current_selection = self._friend_permission_state()
+            if current_selection == "仅聊天":
+                raise FriendPermissionError("好友权限在选择期间发生变化，已停止任务")
+            return bool(current) and current_selection == "朋友圈"
+
+        try:
+            self.ensure_window_responsive(self._verify_hwnd)
+            self._actions.select(
+                choices["朋友圈"], moments_selected,
+                allow_click_fallback=False,
+                skip_if_verified=preserve_existing_selection,
+                wake_event=self._wake_event,
+            )
+        except _STOP_ERRORS:
+            raise
+        except FriendPermissionError:
+            raise
+        except Exception as exc:
+            check_action_deadline()
+            raise FriendPermissionError("好友权限选择未通过核验，已停止任务；不会使用坐标点击") from exc
+
+    def _resolve_unique_friend_submit_control(self):
+        """Resolve the irreversible submit target from a fresh verified root."""
+
+        hwnd = int(self._verify_hwnd or 0)
+        session = self._session
+        if not hwnd or session is None:
+            raise RuntimeError("好友申请窗口未绑定，拒绝提交")
+        expected_pid = int(safe_attr(session, "pid", 0) or 0)
+        expected_class = str(safe_attr(session.profile, "verify_friend_root_class", "") or "")
+        verify_windows = self._process_windows((expected_class,), visible=True, strict=True)
+        if len(verify_windows) != 1 or int(verify_windows[0]) != hwnd:
+            raise RuntimeError("好友申请窗口未唯一保持可见，拒绝提交")
+        root = self._fresh_friend_request_root()
 
         self._raise_scoped_risk(hwnd=hwnd, root=root)
+        self._ensure_friend_permission(select_if_missing=False, root=root)
         matches = self._find_scoped_controls(
             hwnd=hwnd,
             root=root,
@@ -3933,6 +4090,7 @@ class NativeWeixinDriver:
             hwnd=hwnd,
         ):
             self._verify_hwnd = 0
+            self._friend_permission_required = False
             return True
 
         # Qt 5 can expose a false-positive InvokePattern on XOutlineButton.
@@ -3960,6 +4118,7 @@ class NativeWeixinDriver:
         )
         if closed:
             self._verify_hwnd = 0
+            self._friend_permission_required = False
         return bool(closed)
 
     def verify_friend_request(self, timeout: float) -> bool | None:

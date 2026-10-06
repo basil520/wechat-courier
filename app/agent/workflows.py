@@ -1032,6 +1032,7 @@ class WeixinWorkflowEngine:
                 fatal_batch = fatal_batch or error_code in {
                     "ACTION_DEADLINE_EXCEEDED", "WINDOW_BLOCKED", "CLEANUP_FAILED",
                     "EVENT_CLEANUP_FAILED", "UIA_TREE_NOT_READY_AFTER_REFRESH",
+                    "FRIEND_PERMISSION_UNVERIFIED",
                 }
                 self._record_diagnostic(
                     stage=step,

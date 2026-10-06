@@ -3277,7 +3277,14 @@ def _friend_submit_fixture(monkeypatch, controls, *, root_class=None, root_pid=2
         },
     )()
     driver._process_windows = lambda *_args, **_kwargs: [303]
-    driver._find_scoped_controls = lambda **_selector: list(controls)
+    driver._query = object()
+    driver._find_scoped_controls = lambda **selector: [
+        control for control in controls
+        if find_exact_control(
+            ((control, 1),),
+            **{key: value for key, value in selector.items() if key not in {"hwnd", "root"}},
+        ) is control
+    ]
     driver._raise_scoped_risk = lambda **_selector: None
     driver.ensure_window_responsive = lambda *_args, **_kwargs: None
     driver._prepare_click_window = lambda *_args, **_kwargs: None
@@ -3377,6 +3384,9 @@ def test_friend_submit_rejects_ambiguous_confirm_buttons_without_invoking(
 def test_friend_submit_rejects_offscreen_confirm_without_invoking(monkeypatch):
     confirm, calls = _friend_confirm(offscreen=True)
     driver, _root = _friend_submit_fixture(monkeypatch, [confirm])
+    query = driver._find_scoped_controls
+    # Exercise the explicit guard even if a provider ignores the visible filter.
+    driver._find_scoped_controls = lambda **selector: query(**{**selector, "visible": None})
 
     with pytest.raises(RuntimeError, match="不可见"):
         driver.submit_friend_request()
@@ -3411,7 +3421,9 @@ def test_friend_submit_rejects_recycled_confirm_between_resolutions(monkeypatch)
     driver, root = _friend_submit_fixture(monkeypatch, [first])
     replacement.GetTopLevelControl = lambda: root
     snapshots = iter(([first], [replacement]))
-    driver._find_scoped_controls = lambda **_selector: list(next(snapshots))
+    driver._find_scoped_controls = lambda **selector: (
+        list(next(snapshots)) if selector.get("name") == "确定" else []
+    )
 
     with pytest.raises(RuntimeError, match="变化"):
         driver.submit_friend_request()
