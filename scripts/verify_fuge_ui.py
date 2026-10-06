@@ -96,12 +96,18 @@ def main():
             assert image.save(str(path))
             assert len(colors) > 6, (name, len(colors), warnings)
             captures.append({"file": path.name, "width": image.width(), "height": image.height(), "distinctSampleColors": len(colors)})
-            for control in ["startMessageButton", "startFriendsButton", "contactReadButton", "sidebarCollapseButton", "sidebarSettingsButton"]:
+            for control in ["startMessageButton", "startFriendsButton", "contactReadButton", "sidebarCollapseButton", "sidebarSettingsButton",
+                            "friendRangeStart", "friendRangeEnd", "selectFriendRangeButton", "clearFriendSelectionButton",
+                            "friendSelectionCount", "clearFriendTableButton", "globalFriendGreetingField", "globalRelationshipSelector"]:
                 item = find(control)
                 if item is None:
                     continue
                 point = item.mapToScene(item.boundingRect().center())
                 assert 0 <= point.x() < window.width() and 0 <= point.y() < window.height(), (name, control, point)
+                if control.startswith("friend") or control.startswith("global"):
+                    origin = item.mapToScene(QPointF())
+                    assert 0 <= origin.x() <= window.width() - item.width() + 1, (name, control, origin)
+                    assert 0 <= origin.y() <= window.height() - item.height() + 1, (name, control, origin)
 
         native_states = []
         if shell.nativeFrameEnabled:
@@ -199,8 +205,17 @@ def main():
             backend.friends.model.appendEmptyRecord()
             capture(f"friends-invalid-{theme}")
             backend.friends.model.replace_records(deepcopy(records))
+            backend.friends.model.replace_records(deepcopy(records[:1]))
+            capture(f"friends-single-{theme}")
+            backend.friends.model.apply_event({"itemId": records[0].item_id, "outcome": "error"})
+            capture(f"friends-error-{theme}")
+            backend.friends.model.replace_records(deepcopy(records))
             backend.friends.model.setCell(0, "greeting", "用于检查长文本列边界的模拟打招呼语。" * 24)
             capture(f"friends-long-text-{theme}")
+            full_preview = window.findChild(QObject, "friendPreviewDialog")
+            QMetaObject.invokeMethod(full_preview, "open")
+            capture(f"friends-full-preview-{theme}")
+            QMetaObject.invokeMethod(full_preview, "close")
             backend.friends.model.replace_records(records)
             root.setProperty("workspaceIndex", 2)
             contacts = backend.contacts.model.snapshot()

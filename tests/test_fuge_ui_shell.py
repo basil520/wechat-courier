@@ -197,12 +197,12 @@ ApplicationWindow {
                     else:
                         status = text_item("等待开始")
                         interval = next(item for item in items() if item.isVisible() and isinstance(item.property("text"), str)
-                                        and "随机间隔 15–30 秒" in item.property("text"))
+                                        and "请求间隔 15–30 秒" in item.property("text"))
                         status_x = status.mapToScene(QPointF()).x()
                         interval_x = interval.mapToScene(QPointF()).x()
                         assert abs(status_x - interval_x) < 1, (status_x, interval_x)
                         button = find("startFriendsButton")
-                        warning = text_item("将实际提交好友申请")
+                        warning = text_item("实际提交，无法撤回")
                         assert warning.mapToScene(QPointF()).x() >= status_x
                         assert warning.mapToScene(QPointF(warning.width(), 0)).x() + 12 <= button.mapToScene(QPointF()).x()
                         for item in (status, interval, warning, button):

@@ -36,8 +36,8 @@ def test_friend_workspace_has_editable_import_table_and_selection_limit():
     assert "startFriends" in source
     assert 'status === "working" ? "执行中"' in source
     assert '"预检完成" : "已提交"' in source
-    assert "开始添加好友" in source
-    assert "将实际提交好友申请" in source
+    assert "开始申请" in source
+    assert "实际提交，无法撤回" in source
     assert "friendSubmitConfirmDialog" in source
     assert "提交后无法撤回" in source
 

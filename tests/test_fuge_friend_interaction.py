@@ -89,7 +89,120 @@ def exercise(scenario):
         account = field("friendAccountField")
         greeting = field("friendGreetingField")
         relationship = field("friendRelationshipSelector")
-        if scenario == "clear":
+        if scenario == "visual_layout":
+            toolbar = root.findChild(QQuickItem, "friendTools")
+            assert toolbar is not None, "statistics and range must share a responsive toolbar"
+            header = root.findChild(QQuickItem, "friendHeader")
+            assert header is not None and abs(header.height() - 72) <= 1
+            controls = [root.findChild(QQuickItem, key) for key in (
+                "friendRangeStart", "friendRangeEnd", "selectFriendRangeButton",
+                "clearFriendSelectionButton", "friendSelectionCount", "clearFriendTableButton")]
+            assert all(control is not None for control in controls)
+            for width in (1280, 1040, 1039, 744, 896, 1104):
+                view.resize(width, 630)
+                QTest.qWait(100)
+                assert toolbar.property("compact") == (width - 48 < 1040)
+                positions = [item.mapToScene(QPoint(0, 0)) for item in controls]
+                assert abs(positions[0].y() - positions[1].y()) <= 1
+                if not toolbar.property("compact"):
+                    assert max(p.y() for p in positions) - min(p.y() for p in positions) < 12
+                for item, point in zip(controls, positions):
+                    assert 24 <= point.x() <= width - item.width() - 23, item.objectName()
+                    assert 0 <= point.y() <= 630 - item.height(), item.objectName()
+                assert table.height() >= 180, (width, table.height())
+            for control in controls[:4]:
+                assert control.height() == 36
+            assert root.findChild(QQuickItem, "clearFriendTableButton").property("text") == ""
+            assert root.findChild(QQuickItem, "friendActionBar").height() <= 72
+        elif scenario == "visual_preview":
+            account_label = root.findChild(QQuickItem, "friendCurrentAccount")
+            greeting_label = root.findChild(QQuickItem, "friendPreviewGreeting")
+            remark_label = root.findChild(QQuickItem, "friendPreviewRemark")
+            assert all(label is not None for label in (account_label, greeting_label, remark_label)), "preview must separate identity, greeting and remark"
+            friends.defaultGreeting = "Hello {姓名}"
+            friends.defaultRelationship = "妈妈"
+            QTest.qWait(80)
+            assert "offline_0" in account_label.property("text")
+            assert greeting_label.property("text") == friends.model.preview(0)["greeting"]
+            assert remark_label.property("text") == friends.model.preview(0)["remark"]
+            click(account)
+            assert QQmlProperty(account.property("background"), "border.color").read().alpha() == 0, "locating is not editing"
+            edit(greeting)
+            replace("specificgreeting")
+            assert greeting_label.property("text") == friends.model.preview(0)["greeting"], "preview must not read an uncommitted draft"
+            QTest.keyClick(view, Qt.Key_Return)
+            QTest.qWait(80)
+            assert greeting_label.property("text") == "specificgreeting"
+            root.setProperty("currentRow", 1)
+            QTest.qWait(80)
+            assert "offline_1" in account_label.property("text")
+            assert greeting_label.property("text") == friends.model.preview(1)["greeting"]
+            view.resize(744, 630)
+            QTest.qWait(80)
+            assert remark_label.mapToScene(QPoint()).y() > greeting_label.mapToScene(QPoint()).y()
+            friends.model.replace_records(load_friend_records([
+                ["姓名", "账号"], *[[f"Student{i}", f"offline_{i}"] for i in range(200)]
+            ]))
+            root.setProperty("currentRow", 199)
+            QTest.qWait(80)
+            assert "offline_199" in account_label.property("text"), "preview must work for non-instantiated rows"
+            friends.model.setCell(199, "account", "changed_199")
+            QTest.qWait(80)
+            assert "changed_199" in account_label.property("text")
+            assert greeting_label.property("text") == friends.model.preview(199)["greeting"]
+            friends.model.setCell(199, "greeting", "Long preview " * 100)
+            QTest.qWait(80)
+            full_preview = root.findChild(QObject, "friendPreviewDialog")
+            click(root.findChild(QQuickItem, "friendFullPreviewButton"))
+            assert full_preview.property("opened")
+            content = root.findChild(QQuickItem, "friendFullPreviewText")
+            assert content.property("readOnly")
+            assert friends.model.preview(199)["greeting"] in content.property("text")
+            assert friends.model.selectedCount == 0, "preview must not select or start a task"
+            QTest.keyClick(view, Qt.Key_Escape)
+            QTest.qWait(100)
+            assert not full_preview.property("opened")
+            click(root.findChild(QQuickItem, "friendFullPreviewButton"))
+            task.set_active(True)
+            QTest.qWait(100)
+            assert not full_preview.property("opened"), "task lock must dismiss the editor preview"
+        elif scenario == "visual_states":
+            row = account.parentItem().parentItem()
+            current_color = row.property("color")
+            friends.model.setSelected(0, True)
+            QTest.qWait(50)
+            assert row.property("color") == current_color, "checking a row must not paint it orange"
+            colors = {}
+            for outcome, label in (("error", "执行异常"), ("unknown", "结果未知"), ("success", "已提交")):
+                friends.model.apply_event({"itemId": friends.model.record_at(0).item_id,
+                                          "outcome": outcome, "step": "submit_verified"})
+                QTest.qWait(50)
+                pending = [row]
+                tag = None
+                while pending:
+                    item = pending.pop()
+                    if item.property("text") == label:
+                        tag = item.parentItem()
+                        break
+                    pending.extend(item.childItems())
+                assert tag is not None, label
+                colors[outcome] = tag.property("color").name()
+            assert colors["error"] == "#fff0f1"
+            assert len(set(colors.values())) == 3, "failure, unknown and success must have distinct visual states"
+        elif scenario == "visual_empty":
+            empty = root.findChild(QQuickItem, "friendEmptyState")
+            assert empty is not None
+            assert not empty.isVisible()
+            friends.model.clearRecords()
+            QTest.qWait(80)
+            assert empty.isVisible()
+            assert root.findChild(QQuickItem, "friendEmptyImportButton").property("enabled")
+            assert root.findChild(QQuickItem, "friendTableHeaderContent").width() == root.property("tableContentWidth")
+            assert root.findChild(QQuickItem, "friendCurrentAccount").property("text") == "未定位记录"
+            task.set_active(True)
+            QTest.qWait(80)
+            assert not root.findChild(QQuickItem, "friendEmptyImportButton").property("enabled")
+        elif scenario == "clear":
             button = root.findChild(QQuickItem, "clearFriendTableButton")
             point = button.mapToScene(QPoint(0, 0))
             image = view.grabWindow()
@@ -212,7 +325,7 @@ def exercise(scenario):
             for width in (1560, 960, 1320):
                 view.resize(width, 700)
                 QTest.qWait(100)
-                assert abs(float(table.property("contentWidth")) - max(width, 1158)) <= 1
+                assert abs(float(table.property("contentWidth")) - max(table.width(), 1158)) <= 1
                 header = root.findChild(QQuickItem, "friendTableHeaderContent")
                 assert abs(header.width() - float(table.property("contentWidth"))) <= 1
                 for editor_name, header_index in (("friendNameField", 2), ("friendAccountField", 3), ("friendGreetingField", 5)):
@@ -231,7 +344,7 @@ def exercise(scenario):
                     assert 0 <= position.x() and position.x() + control.width() <= width + 1, object_name
                     assert 0 <= position.y() and position.y() + control.height() <= 681, object_name
                 start = root.findChild(QQuickItem, "startFriendsButton")
-                assert start.mapToScene(QPoint(0, 0)).x() + start.width() >= width - 17, "primary action must align to footer edge"
+                assert start.mapToScene(QPoint(0, 0)).x() + start.width() >= width - 25, "primary action must align to footer edge"
                 if os.environ.get("FUGE_FRIEND_SCREENSHOT"):
                     path = Path(os.environ["FUGE_FRIEND_SCREENSHOT"])
                     assert view.grabWindow().save(str(path.with_stem(f"{path.stem}-{width}")))
@@ -321,7 +434,7 @@ def exercise(scenario):
         app.processEvents()
 
 
-@pytest.mark.parametrize("scenario", ["drafts", "navigation", "lock", "menus", "widths", "relationship", "relationship_reuse", "clear"])
+@pytest.mark.parametrize("scenario", ["drafts", "navigation", "lock", "menus", "widths", "relationship", "relationship_reuse", "clear", "visual_layout", "visual_preview", "visual_states", "visual_empty"])
 def test_friend_page_interaction(scenario):
     result = subprocess.run(
         [sys.executable, str(Path(__file__).resolve()), scenario], cwd=ROOT,
